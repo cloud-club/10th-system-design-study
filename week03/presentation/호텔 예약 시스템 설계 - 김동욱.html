@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>호텔 예약 시스템 설계 | White Edition</title>
+<meta name="description" content="호텔 예약 시스템을 바탕으로 재구성한 한글 시스템 설계 발표 자료">
+<style>
+:root { font-family: "Pretendard", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", sans-serif; color-scheme:dark; }
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:#07101e}
+button{font:inherit}
+#viewport{position:fixed;inset:0;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#07101e}
+#deck{position:absolute;width:1600px;height:900px;transform-origin:center center;overflow:hidden;box-shadow:0 36px 100px #0006}
+.slide{--bg:#091426;--fg:#f6f9ff;--muted:#b5c5de;--stroke:#ffffff26;--surface:#ffffff0b;--surface-strong:#ffffff14;--cardshadow:0 14px 35px #0002;position:absolute;inset:0;display:none;overflow:hidden;color:var(--fg);background:var(--bg);padding:78px 100px 80px;isolation:isolate}
+.slide.active{display:block}
+.slide::before{content:"";position:absolute;inset:-20%;z-index:-2;pointer-events:none;background:radial-gradient(circle at 90% 13%,#4889db18 0,transparent 30%),radial-gradient(circle at 7% 95%,#45d8bd0a 0,transparent 30%)}
+.slide.light{--bg:#f6f8fc;--fg:#13243d;--muted:#61718a;--stroke:#1b375521;--surface:#fff;--surface-strong:#e9f0f8;--cardshadow:0 16px 40px #19375811}
+.slide.light::before{background:radial-gradient(circle at 100% -10%,#bce4ff80 0,transparent 34%),radial-gradient(circle at 0 100%,#e3edffbf 0,transparent 34%)}
+.topline{display:flex;align-items:center;justify-content:space-between;position:relative;z-index:3}
+.kicker{font-size:18px;font-weight:800;letter-spacing:2.6px;text-transform:uppercase;color:#79cef6}
+.light .kicker{color:#236dc0}
+.top-meta{font-size:17px;font-weight:750;letter-spacing:1.1px;color:var(--muted)}
+.heading{position:relative;z-index:2;margin-top:48px;margin-bottom:30px}
+.heading h2{font-size:65px;letter-spacing:-3.6px;line-height:1.18;margin:0;font-weight:850}
+.heading p{font-size:27px;color:var(--muted);margin:17px 0 0;line-height:1.5;letter-spacing:-.8px}
+.footer{position:absolute;bottom:52px;left:100px;right:100px;z-index:4;display:flex;justify-content:space-between;align-items:center;font-size:17px;color:var(--muted)}
+.footer .accentline{display:flex;gap:10px;align-items:center}
+.footer .tick{display:block;width:25px;height:2px;background:#65c9fa}
+.footer .pagenum{font-variant-numeric:tabular-nums;letter-spacing:1px;font-weight:760}
+.card{background:var(--surface);border:1px solid var(--stroke);border-radius:23px;box-shadow:var(--cardshadow)}
+.pill{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--stroke);background:var(--surface);padding:11px 17px;border-radius:99px;font-size:19px;font-weight:700;white-space:nowrap}
+.smallcaps{font-size:17px;letter-spacing:2px;font-weight:850;text-transform:uppercase;color:#85cafd}
+.light .smallcaps{color:#3478bc}
+.mark{color:#8edfff}.light .mark{color:#1878c8}
+.orange{color:#ffbb9c}.light .orange{color:#c75c38}
+.green{color:#c3f9a7}.light .green{color:#247b57}
+.muted{color:var(--muted)}
+/* Cover */
+#s1{background:radial-gradient(circle at 80% 38%,#22549262,transparent 36%),linear-gradient(124deg,#081326,#101e38 74%,#13223a)}
+.cover-orb{position:absolute;right:-150px;top:-180px;width:770px;height:770px;border:1px solid #91d9ff18;border-radius:50%;box-shadow:0 0 0 95px #91d9ff09,0 0 0 195px #91d9ff05;pointer-events:none}
+.cover-content{position:absolute;left:105px;top:190px;width:780px}
+.cover-content .overline{display:flex;gap:12px;align-items:center;font-size:20px;font-weight:800;letter-spacing:2px;color:#8ecdf6}
+.overline .line{height:3px;width:48px;background:#9ed9ff}
+.cover-content h1{margin:38px 0 30px;font-weight:860;font-size:91px;line-height:1.15;letter-spacing:-6px}
+.cover-content h1 span{color:#88cfff}
+.cover-content .en{font-size:32px;color:#bed5ef;font-weight:600;letter-spacing:-.2px}
+.cover-content .thesis{margin-top:48px;font-size:30px;line-height:1.55;font-weight:650;letter-spacing:-1px;color:#e1edfa}
+.cover-chips{display:flex;gap:12px;margin-top:44px}
+.cover-chips span{padding:12px 18px;background:#ffffff0f;border:1px solid #ffffff24;border-radius:12px;font-weight:750;font-size:18px}
+.cover-art{position:absolute;right:100px;top:186px;width:565px;height:532px;border-radius:28px;background:#ffffff0e;border:1px solid #ffffff29;box-shadow:0 26px 70px #0005;backdrop-filter:blur(6px);padding:30px}
+.cover-art .artifactbar{display:flex;justify-content:space-between;align-items:center;color:#a2bddb;font-size:16px;font-weight:800;letter-spacing:1.3px}
+.cover-art .three{display:flex;gap:7px}.cover-art .three b{width:10px;height:10px;border-radius:50%;background:#7cbbe7}
+.cover-art .art-title{font-size:31px;margin-top:40px;font-weight:850;color:#fff}
+.cover-art .art-sub{font-size:20px;color:#bbcee5;margin-top:9px}
+.dategrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:35px}
+.date-cell{height:96px;border:1px solid #9bd3ff3b;border-radius:14px;background:#9bcfff11;padding:16px 10px;text-align:center}
+.date-cell .day{font-size:16px;color:#b5cfea}
+.date-cell strong{display:block;font-size:27px;margin-top:5px}
+.date-cell:nth-child(3){background:#a8f1c72b;border-color:#abf6cb9e}
+.cover-art .book-success{position:absolute;left:30px;right:30px;bottom:30px;background:linear-gradient(100deg,#194e51,#175759);border:1px solid #6ac6bd7a;color:white;padding:22px;border-radius:16px;display:flex;justify-content:space-between;align-items:center}
+.cover-art .book-success strong{font-size:23px}.cover-art .book-success small{display:block;font-size:16px;color:#a2ddd3;margin-top:7px}
+.roundcheck{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;background:#82dfb9;color:#083b35;font-size:29px;font-weight:800}
+/* Scope */
+.stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;margin-top:40px}
+.stat-card{padding:29px 35px 31px;background:white;border:1px solid #dce6f0;border-radius:24px;box-shadow:0 16px 30px #1c46650c}
+.stat-card .stat-num{font-size:72px;line-height:1.1;letter-spacing:-3px;font-weight:850;color:#1767ad}
+.stat-card:nth-child(2) .stat-num{color:#167a71}
+.stat-card:nth-child(3) .stat-num{color:#bd6c48}
+.stat-card .stat-label{font-size:25px;margin-top:12px;font-weight:800;color:#1b3049}
+.stat-card .stat-caption{font-size:19px;margin-top:8px;color:#718096}
+.scope-bottom{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:29px}
+.scope-panel{padding:28px 33px;background:#eef4fb;border:1px solid #d9e4f2;border-radius:24px}
+.scope-panel .panel-h{font-size:25px;font-weight:850;color:#213a59;margin-bottom:14px}
+.scope-panel ul{list-style:none;margin:0;padding:0;display:grid;gap:12px}
+.scope-panel li{font-size:21px;color:#435773;font-weight:650;display:flex;gap:14px;line-height:1.38}
+.scope-panel li::before{content:"✓";color:#188a88;font-weight:900}
+.scope-panel:nth-child(2) li::before{content:"•";color:#d88054}
+/* traffic */
+.traffic-layout{display:grid;grid-template-columns:1.1fr .7fr;gap:76px;margin-top:62px;align-items:center}
+.funnel{display:flex;flex-direction:column;align-items:center;gap:13px}
+.funnel-piece{position:relative;height:130px;display:flex;align-items:center;justify-content:space-between;padding:0 52px;color:#081b2b;font-weight:850;clip-path:polygon(0 0,100% 0,calc(100% - 55px) 100%,55px 100%);text-shadow:0 1px #fff4}
+.funnel-piece .f-text{font-size:29px}.funnel-piece .f-number{font-size:51px;white-space:nowrap;letter-spacing:-2px}
+.funnel-piece .f-number small{font-size:22px;letter-spacing:0}
+.funnel-piece.one{width:800px;background:#a7d9ff}.funnel-piece.two{width:615px;background:#85d7d3}.funnel-piece.three{width:433px;background:#b9e88a}
+.traffic-points{display:flex;flex-direction:column;gap:19px}
+.traffic-points .quote{font-size:37px;font-weight:850;line-height:1.45;letter-spacing:-1.4px}
+.traffic-points .metric{padding:26px 30px;border:1px solid #80d4ff32;background:#ffffff0b;border-radius:18px}
+.traffic-points .metric strong{font-size:40px;color:#a0dbff;letter-spacing:-1px}
+.traffic-points .metric p{font-size:20px;margin:9px 0 0;color:#b2c4da}
+.traffic-points .explain{font-size:21px;color:#b2c4da;line-height:1.6}
+/* flow */
+.flow-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-top:76px;position:relative}
+.flow-grid::before{content:"";position:absolute;left:11%;right:11%;top:71px;border-top:2px dashed #7592b550}
+.flow-step{position:relative;z-index:1;border:1px solid #d9e3f1;background:white;border-radius:22px;padding:29px 26px;min-height:255px;box-shadow:0 13px 28px #193f6b0b}
+.flow-step .stepn{height:58px;width:58px;border-radius:16px;display:grid;place-items:center;background:#e7f1ff;color:#1d72c1;font-size:25px;font-weight:900;margin-bottom:31px}
+.flow-step:nth-child(3) .stepn{background:#dcf6ed;color:#17785c}
+.flow-step:nth-child(4) .stepn{background:#fff0e9;color:#c17450}
+.flow-step h3{font-size:29px;line-height:1.25;margin:0;color:#1b3350;font-weight:850}
+.flow-step p{font-size:20px;color:#61738a;line-height:1.5;margin:15px 0 0}
+.statusflow{display:flex;align-items:center;justify-content:center;gap:18px;margin-top:53px}
+.statusbox{font-size:23px;font-weight:800;padding:18px 24px;border:1px solid #cbdbe9;border-radius:13px;background:#edf2f9;color:#344861}
+.statusbox.success{background:#e4f8ec;color:#25734c;border-color:#b8e4ca}
+.statusbox.fail{background:#fff0ec;color:#af5a47;border-color:#f4cabc}
+.status-arrow{font-size:28px;color:#8096ab}
+.status-caption{font-size:19px;text-align:center;color:#71859b;margin-top:15px}
+/* architecture */
+.arch-stage{position:relative;margin-top:20px;height:548px;width:1400px}
+.arch-stage svg{position:absolute;inset:0;z-index:0;width:100%;height:100%;overflow:visible}
+.arch-node{position:absolute;z-index:2;border-radius:17px;background:#132c46;border:1px solid #79bcff46;text-align:center;display:flex;align-items:center;justify-content:center;flex-direction:column;box-shadow:0 18px 32px #050e1e45}
+.arch-node .node-label{font-size:25px;font-weight:820}.arch-node .node-sub{font-size:16px;margin-top:8px;color:#a7c4e0;font-weight:620}
+.arch-node.gateway{background:#214b75;border-color:#78bdfa80}
+.arch-node.service{background:#132e4e}
+.arch-node.reservation{background:#174f50;border-color:#6cdbbd8c}
+.arch-node.storage{background:#0e2037;border:1px dashed #69a4d76b}
+.arch-node.storage .node-label{font-size:21px}
+.arch-node.redis{background:#4b2738;border-color:#ff95a45c}
+.arch-inset{position:absolute;top:27px;bottom:auto;right:12px;padding:11px 19px;border-radius:14px;border:1px solid #89bdd944;background:#132339;font-size:18px;color:#c7d8ef}
+.arch-inset strong{color:#a8e2fc}
+/* data model */
+.model-grid{display:grid;grid-template-columns:455px 1fr;gap:31px;margin-top:37px}
+.model-left{display:flex;flex-direction:column;gap:21px}
+.model-panel{padding:28px;background:#fff;border:1px solid #dae5f1;border-radius:22px;box-shadow:0 10px 25px #20405d0c}
+.model-panel .over{font-size:16px;letter-spacing:1px;font-weight:800;color:#2672b4}
+.model-panel h3{font-size:28px;color:#1b3856;margin:12px 0 18px}
+.rooms{display:flex;gap:12px;margin:25px 0}
+.room{flex:1;height:77px;display:grid;place-items:center;background:#e9f1fb;border:2px solid #c6d9ed;border-radius:10px;color:#4a6c90;font-weight:800;font-size:20px}
+.room.pick{background:#e2f7ed;border-color:#72c3a7;color:#146747}
+.model-panel .hint{font-size:20px;color:#6b8099;line-height:1.55}
+.inventory-panel{background:#fff;border:1px solid #dae5f1;border-radius:22px;box-shadow:0 10px 25px #20405d0c;padding:30px 33px}
+.inventory-title{display:flex;align-items:center;justify-content:space-between;color:#183b5b}
+.inventory-title h3{font-size:29px;margin:0}
+.inventory-title .key{font-size:17px;color:#3f749f;background:#ecf5ff;border-radius:9px;padding:9px 12px;font-weight:750}
+.inv-table{width:100%;border-collapse:collapse;margin-top:25px;font-size:23px}
+.inv-table thead{background:#eaf1fa;color:#4b6482;font-size:19px}
+.inv-table th,.inv-table td{padding:23px 14px;text-align:center;border-bottom:1px solid #e6edf4}
+.inv-table th:first-child,.inv-table td:first-child{text-align:left;padding-left:24px}
+.inv-table td{font-weight:700;color:#314c68}
+.inv-table .left{font-weight:900;color:#197b64}
+.inv-table tr:last-child td{border-bottom:0}
+.model-note{display:flex;gap:14px;align-items:center;margin-top:29px;padding:20px;background:#e9f5ef;border:1px solid #bce4d0;border-radius:15px;color:#246c53;font-weight:800;font-size:22px;line-height:1.45}
+/* race */
+.race-layout{display:grid;grid-template-columns:790px 1fr;gap:64px;margin-top:42px}
+.race-diagram{position:relative;height:435px;border:1px solid #f7b3a84b;border-radius:24px;background:radial-gradient(circle at 50% 45%,#68313b46,transparent 70%),#ffffff08}
+.last-room{position:absolute;top:26px;left:235px;width:315px;height:78px;border-radius:14px;background:#292d45;border:1px solid #ffa1a38a;display:flex;align-items:center;justify-content:center;color:#fff;font-size:28px;font-weight:870}
+.last-room span{color:#ffb7a8;margin-left:12px}
+.race-people{display:flex;justify-content:space-between;position:absolute;left:70px;right:70px;top:166px}
+.race-person{width:226px;padding:20px;text-align:center;background:#142d4a;border:1px solid #78bffa6a;border-radius:19px}
+.race-person .p-icon{font-size:37px;line-height:1}.race-person h4{font-size:25px;margin:10px 0 6px}.race-person p{font-size:18px;color:#b9d0e7;margin:0}
+.race-lines{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none}
+.race-failure{position:absolute;bottom:24px;left:124px;right:124px;border:1px solid #fa857f99;border-radius:12px;background:#612d37;padding:18px;font-weight:830;text-align:center;font-size:24px;color:#ffdbd7}
+.race-right .bigquote{font-size:37px;font-weight:850;line-height:1.4;margin:4px 0 34px;letter-spacing:-1.3px}
+.race-item{padding:25px;border:1px solid #ffffff2f;border-radius:18px;margin-bottom:18px;background:#ffffff0b}
+.race-item h4{font-size:25px;margin:0 0 12px;color:#fff;font-weight:850}
+.race-item p{font-size:21px;color:#becee2;line-height:1.5;margin:0}
+.race-item strong{color:#bce6ff}
+/* concurrency */
+.lock-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:21px;margin-top:46px}
+.lock-card{background:white;border:1px solid #d6e2f1;border-radius:21px;padding:28px 26px;min-height:332px;box-shadow:0 12px 28px #2445640d}
+.lock-card .badge{display:inline-flex;border-radius:8px;background:#e6f2ff;color:#2875bb;padding:8px 11px;font-size:17px;font-weight:850}
+.lock-card:nth-child(2) .badge{background:#e9f7ed;color:#308466}
+.lock-card:nth-child(3) .badge{background:#fff0e8;color:#b76b4b}
+.lock-card h3{font-size:30px;color:#203b5a;margin:22px 0 17px;letter-spacing:-1px}
+.lock-card .code-line{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;color:#1b5b90;font-size:18px;background:#eff4f9;padding:14px;border-radius:9px;font-weight:700}
+.lock-card p{font-size:21px;line-height:1.5;color:#5b708b;margin:21px 0 0}
+.lock-card .trade{color:#a26751;font-size:19px;font-weight:760;margin-top:18px}
+.lock-reco{display:flex;align-items:center;gap:25px;margin-top:28px;padding:25px 31px;background:#e6f1fc;border:1px solid #bcd8ef;border-radius:17px}
+.lock-reco .circle{height:50px;width:50px;border-radius:50%;background:#2678c0;color:white;display:grid;place-items:center;font-size:25px;font-weight:900;flex-shrink:0}
+.lock-reco p{font-size:23px;font-weight:780;color:#28506e;line-height:1.42;margin:0}
+/* cache */
+.cache-grid{display:grid;grid-template-columns:1fr 420px;gap:48px;margin-top:26px;align-items:start}
+.cache-diagram{height:392px;border:1px solid #ffffff28;border-radius:25px;background:#ffffff0a;position:relative}
+.cache-node{position:absolute;display:grid;place-items:center;text-align:center;border-radius:17px;font-size:26px;font-weight:850;line-height:1.35;border:1px solid #92cfff63;background:#1c385c;color:#eaf5ff}
+.cache-node small{display:block;font-size:17px;color:#bad0eb;font-weight:650;margin-top:5px}
+.cache-node.client{left:32px;top:146px;width:185px;height:114px}
+.cache-node.redis{left:354px;top:26px;width:237px;height:119px;background:#4c303c;border-color:#ef9c9d80}
+.cache-node.db{left:354px;bottom:26px;width:237px;height:119px;background:#174c4e;border-color:#8bd9be9c}
+.cache-diagram svg{position:absolute;width:100%;height:100%;inset:0}
+.cache-tag{font-size:18px;font-weight:800;color:#9dcceb}
+.cache-list{display:flex;flex-direction:column;gap:12px}
+.cache-list .point{padding:18px 22px;background:#ffffff0c;border:1px solid #ffffff25;border-radius:18px}
+.cache-list .point h4{font-size:23px;margin:0 0 8px;color:#c6edff}
+.cache-list .point p{font-size:19px;color:#b4c9df;line-height:1.56;margin:0}
+.cache-list .point .emph{color:#bdf4d7;font-weight:850}
+.cache-banner{display:flex;justify-content:center;align-items:center;gap:16px;margin-top:18px;padding:16px 24px;background:#265c56;border:1px solid #9de4c879;border-radius:15px;text-align:center;font-size:23px;font-weight:850;color:#dcffed}
+/* scaling */
+.scale-panels{display:grid;grid-template-columns:1fr 1fr;gap:26px;margin-top:44px}
+.scale-panel{background:white;border:1px solid #dbe7f0;border-radius:24px;padding:37px;min-height:450px;box-shadow:0 12px 30px #25465c0e}
+.scale-panel h3{font-size:35px;margin:0 0 15px;color:#1c3956;letter-spacing:-1.5px}
+.scale-panel .intro{font-size:21px;color:#667f96;margin:0 0 30px;line-height:1.48}
+.scale-feature{display:flex;gap:18px;align-items:flex-start;border-top:1px solid #e5edf5;padding:19px 0}
+.scale-feature .icon{width:48px;height:48px;background:#e9f3ff;border-radius:13px;color:#247ac1;font-weight:900;font-size:24px;display:grid;place-items:center;flex-shrink:0}
+.scale-feature:nth-child(4) .icon{background:#e4f7ef;color:#218366}
+.scale-feature strong{display:block;font-size:24px;color:#284561;margin:0 0 8px}.scale-feature p{font-size:19px;line-height:1.43;color:#6a7f94;margin:0}
+.scale-note{position:absolute;left:100px;right:100px;bottom:106px;text-align:center;color:#617e99;font-size:21px;font-weight:700}
+/* finish */
+#s11{background:radial-gradient(circle at 82% 26%,#27729955,transparent 32%),linear-gradient(135deg,#0a172c,#0b1c32)}
+.end-head{font-size:20px;color:#80d4f6;letter-spacing:3px;font-weight:850;margin-top:112px}
+.end-title{font-size:79px;line-height:1.18;letter-spacing:-4.5px;margin:28px 0 40px;font-weight:880}
+.end-title em{font-style:normal;color:#a5edce}
+.end-list{display:flex;gap:22px;margin-top:38px}
+.end-point{flex:1;padding:31px 29px;border-radius:20px;background:#ffffff0e;border:1px solid #ffffff28;min-height:220px}
+.end-point .n{font-size:21px;color:#81d5ef;font-weight:830;letter-spacing:2px}
+.end-point h4{font-size:29px;line-height:1.35;margin:19px 0 0;font-weight:850}
+.end-point p{font-size:19px;color:#c3d5e7;margin:14px 0 0;line-height:1.46}
+.end-source{position:absolute;left:102px;right:100px;bottom:125px;border-top:1px solid #ffffff30;padding-top:23px;display:flex;justify-content:space-between;gap:20px;color:#a4bad2;font-size:18px}
+.end-source a{color:#b3e8ff;text-decoration:none;border-bottom:1px solid #b3e8ff80}
+/* shared navigation */
+#controls{position:fixed;left:50%;bottom:17px;z-index:99;transform:translateX(-50%);display:flex;align-items:center;gap:14px;background:#0b1930ed;border:1px solid #ffffff28;border-radius:16px;padding:9px 11px;color:#f7faff;box-shadow:0 9px 35px #0007;transition:opacity .2s}
+.navbtn{height:39px;min-width:40px;border:0;border-radius:10px;background:#ffffff15;color:#edf7ff;cursor:pointer;font-size:20px;font-weight:780;padding:0 10px}
+.navbtn:hover{background:#ffffff30}.navbtn:focus-visible{outline:2px solid #8edbff}
+#counter{font-size:15px;font-weight:800;color:#c2d3e7;min-width:62px;text-align:center;font-variant-numeric:tabular-nums}
+#progress{height:3px;position:fixed;z-index:100;left:0;top:0;background:linear-gradient(90deg,#5ccdf5,#b3efc3);width:9.09%;transition:width .2s ease}
+#toc{position:fixed;inset:0;z-index:150;background:#041021e8;display:none;align-items:center;justify-content:center;backdrop-filter:blur(6px)}
+#toc.open{display:flex}
+#toc-panel{width:min(900px,90vw);max-height:85vh;overflow-y:auto;background:#102037;color:#fff;border:1px solid #ffffff35;border-radius:24px;padding:36px 42px;box-shadow:0 25px 100px #0009}
+#toc-panel h2{font-size:31px;margin:0 0 25px}#toc-items{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.toc-item{border:1px solid #ffffff25;background:#ffffff0c;border-radius:12px;color:#eef6ff;font-size:19px;text-align:left;padding:16px 18px;cursor:pointer}.toc-item:hover{border-color:#71caff;background:#ffffff20}
+.toc-item span{display:inline-block;width:32px;font-size:15px;color:#78d7fd;font-weight:900}
+#toc-close{float:right;background:#ffffff15;border:0;border-radius:9px;color:white;padding:8px 13px;cursor:pointer;font-weight:850}
+#help{position:fixed;z-index:40;right:18px;bottom:25px;color:#f2f8ff92;font-size:12px;pointer-events:none}
+@media(max-width:680px){#controls{bottom:10px}#help{display:none}#toc-items{grid-template-columns:1fr}}
+
+/* Fit dense data-model content above the persistent footer */
+#s6 .model-panel{padding:21px 25px}
+#s6 .model-panel h3{font-size:25px;margin:8px 0 11px}
+#s6 .rooms{margin:15px 0}
+#s6 .room{height:68px}
+#s6 .model-panel .hint{font-size:18px;line-height:1.42}
+#s6 .model-left{gap:15px}
+#s6 .inventory-panel{padding:23px 27px}
+#s6 .inv-table{margin-top:16px}
+#s6 .inv-table th,#s6 .inv-table td{padding:15px 13px}
+#s6 .model-note{margin-top:15px;padding:14px;font-size:19px}
+
+@media print{
+ @page{size:16in 9in;margin:0}
+ html,body{height:auto;overflow:visible;background:white}
+ #viewport{position:static;display:block;overflow:visible;width:1600px;height:auto;background:white}
+ #deck{position:static;width:1600px;height:auto;transform:none!important;box-shadow:none;overflow:visible}
+ .slide{position:relative;display:block!important;width:1600px;height:900px;page-break-after:always;break-after:page;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+ #controls,#progress,#toc,#help{display:none!important}
+}
+
+/* ============================================================
+   UNIFIED WHITE PRESENTATION THEME
+   All 11 slides, including diagrams, components and navigation.
+   Colors: navy #18324F | blue #1768AA | teal #117C72
+   ============================================================ */
+:root {color-scheme:light}
+html, body, #viewport {background:#ffffff}
+#deck {box-shadow:0 28px 84px #16365215}
+.slide, .slide.light {
+ --bg:#ffffff;
+ --fg:#18324f;
+ --muted:#64758b;
+ --stroke:#dce5ef;
+ --surface:#f6f9fd;
+ --surface-strong:#eaf2fa;
+ --cardshadow:0 13px 32px #244c7410;
+ background:#ffffff;
+ color:var(--fg)
+}
+#s1,#s11 {background:#ffffff}
+.slide::before,.slide.light::before {background:none}
+.kicker,.light .kicker,.smallcaps,.light .smallcaps {color:#1f70b0}
+.mark,.light .mark {color:#176eb2}
+.orange,.light .orange {color:#be5d48}
+.green,.light .green {color:#167d67}
+.footer .tick {background:#2c8fca}
+.card {box-shadow:0 12px 32px #183e6210}
+/* Slide 01: opening / availability mock-up */
+#s1 .cover-orb {
+ border-color:#e1ecf7;
+ box-shadow:0 0 0 95px #f2f7fc,0 0 0 195px #f8fbfe;
+ z-index:-1
+}
+#s1 .cover-content .overline {color:#2073af}
+#s1 .overline .line {background:#2689cb}
+#s1 .cover-content h1 {color:#15304d}
+#s1 .cover-content h1 span {color:#1476b9}
+#s1 .cover-content .en {color:#536c86}
+#s1 .cover-content .thesis {color:#2e4763}
+#s1 .cover-content .thesis strong {color:#117961!important}
+#s1 .cover-chips span {background:#edf5fb;border:1px solid #d4e4f3;color:#42617e}
+#s1 .cover-art {background:#f9fbfe;border:1px solid #d2e2f1;box-shadow:0 25px 60px #234d7618;backdrop-filter:none}
+#s1 .cover-art .artifactbar {color:#66809c}
+#s1 .cover-art .three b {background:#76b8db}
+#s1 .cover-art .art-title {color:#1b3c5b}
+#s1 .cover-art .art-sub {color:#6e8199}
+#s1 .date-cell {background:#edf5fc;border:1px solid #d0e1f1;color:#1b5079}
+#s1 .date-cell .day {color:#5c7995}
+#s1 .date-cell:nth-child(3) {background:#e9f6f0;border-color:#a8dac3;color:#187358}
+#s1 .cover-art .book-success {background:#e7f6ef;border:1px solid #adddc7;color:#175f49}
+#s1 .cover-art .book-success small {color:#3d8069}
+#s1 .roundcheck {background:#43b48b;color:#ffffff}
+/* Slide 02/04/06/08/10: existing light blocks brought into same surface scale */
+.stat-card,.flow-step,.model-panel,.inventory-panel,.lock-card,.scale-panel {
+ box-shadow:0 10px 29px #1c456509;border-color:#dfe8f1
+}
+/* Slide 03: traffic example */
+#s3 .traffic-points .quote {color:#173350}
+#s3 .traffic-points .metric {background:#f1f7fc;border:1px solid #d5e4f2}
+#s3 .traffic-points .metric strong {color:#126ead}
+#s3 .traffic-points .metric p,
+#s3 .traffic-points .explain {color:#536c86}
+#s3 .traffic-points .explain strong {color:#176eb2!important}
+#s3 .funnel-piece {filter:drop-shadow(0 4px 4px #163a5610)}
+#s3 .funnel>div:last-child {color:#657c94!important}
+/* Slide 05: bright service architecture, distinct node categories */
+#s5 .arch-stage {color:#18324f}
+#s5 .arch-node {background:#f1f7fd;border:1.5px solid #bad5ea;color:#173e60;box-shadow:0 12px 28px #204a7213}
+#s5 .arch-node .node-label {color:#163d60}
+#s5 .arch-node .node-sub {color:#567792}
+#s5 .arch-node.gateway {background:#e0effb;border-color:#89badd}
+#s5 .arch-node.gateway .node-label {color:#175d98}
+#s5 .arch-node.service {background:#f0f6fd;border-color:#c4dced}
+#s5 .arch-node.reservation {background:#e4f6ee;border-color:#92d3b7}
+#s5 .arch-node.reservation .node-label {color:#0b7258}
+#s5 .arch-node.storage {background:#fafcff;border:1.5px dashed #9ebbd1}
+#s5 .arch-inset {background:#edf5fc;border-color:#d1e2f0;color:#4e6e89}
+#s5 .arch-inset strong {color:#166ea9}
+#s5 .arch-stage svg path[stroke="#77bde6"],
+#s5 .arch-stage svg path[stroke="#6599c5"] {stroke:#679dc6}
+#s5 .arch-stage svg marker path {fill:#679dc6}
+#s5 .arch-stage svg text {fill:#5b7791}
+/* Slide 07: concurrency failure, soft red warning */
+#s7 .race-diagram {background:#f9fbfd;border:1px solid #d7e5f0}
+#s7 .last-room {background:#fff0eb;border:1px solid #eab4a5;color:#8c3e36}
+#s7 .last-room span {color:#b34c40}
+#s7 .race-person {background:#eaf4fd;border-color:#b9d6eb;color:#194b73}
+#s7 .race-person h4 {color:#1b486b}
+#s7 .race-person p {color:#607e98}
+#s7 .race-failure {background:#feebe7;border-color:#ebaca5;color:#b04b42}
+#s7 .race-right .bigquote {color:#18324f}
+#s7 .race-item {background:#f4f8fc;border:1px solid #dce7f1}
+#s7 .race-item h4 {color:#183b5a}
+#s7 .race-item p {color:#526c86}
+#s7 .race-item strong {color:#1469a7}
+#s7 .race-lines path[stroke="#7aa9cc"] {stroke:#7ba8c8}
+#s7 .race-lines path[stroke="#f6a4a1"] {stroke:#d0786b}
+#s7 .race-lines marker path {fill:#d0786b}
+/* Slide 09: Redis + DB explanation */
+#s9 .cache-diagram {background:#f8fbfe;border:1px solid #d8e6f1}
+#s9 .cache-node {background:#e2f0fc;border:1px solid #9cc9e9;color:#1b5b89}
+#s9 .cache-node small {color:#537591}
+#s9 .cache-node.redis {background:#ffedf0;border-color:#e7aab5;color:#aa4458}
+#s9 .cache-node.db {background:#e5f6ed;border-color:#91d3ae;color:#126c50}
+#s9 .cache-node.redis small {color:#936b79}
+#s9 .cache-node.db small {color:#527e6c}
+#s9 .cache-diagram svg path[stroke="#94cef7"] {stroke:#619bc6}
+#s9 .cache-diagram svg path[stroke="#a0e8c5"] {stroke:#3f9d7e}
+#s9 .cache-diagram svg marker#cacheArrow path {fill:#619bc6}
+#s9 .cache-diagram svg marker#cacheArrowG path {fill:#3f9d7e}
+#s9 .cache-diagram svg text {fill:#3c6a8e}
+#s9 .cache-list .point {background:#f3f8fc;border:1px solid #d8e5ee}
+#s9 .cache-list .point h4 {color:#176ca8}
+#s9 .cache-list .point p {color:#556f87}
+#s9 .cache-list .point .emph {color:#14755b}
+#s9 .cache-banner {background:#e7f6ef;border:1px solid #afdfc9;color:#176b52}
+#s9 .cache-banner span {color:#176b52!important}
+/* Slide 11: high contrast closing statement */
+#s11 .end-head {color:#2177b4}
+#s11 .end-title {color:#193550}
+#s11 .end-title em {color:#12816d}
+#s11 .end-point {background:#f3f8fd;border:1px solid #dce7f1;box-shadow:0 10px 25px #1e46620a}
+#s11 .end-point .n {color:#1a77b6}
+#s11 .end-point h4 {color:#203e5b}
+#s11 .end-point p {color:#5b738d}
+#s11 .end-source {border-top:1px solid #d8e5ef;color:#647991}
+#s11 .end-source a {color:#1d70b0;border-bottom:1px solid #9fc8e0}
+/* Navigation also matches the bright theme */
+#controls {background:#ffffffed;border:1px solid #d6e3ef;color:#173b59;box-shadow:0 8px 32px #24486a26}
+.navbtn {background:#edf4fa;color:#265b82}
+.navbtn:hover {background:#dcecf8}
+.navbtn:focus-visible {outline:2px solid #2878b8}
+#counter {color:#3e5e79}
+#progress {background:linear-gradient(90deg,#2b88c6,#37b18d)}
+#toc {background:#13283e9c}
+#toc-panel {background:#ffffff;color:#203d59;border:1px solid #caddec;box-shadow:0 25px 75px #122f4866}
+.toc-item {background:#f5f9fd;border:1px solid #d7e5f0;color:#274965}
+.toc-item:hover {background:#e5f2fa;border-color:#81b8dd}
+.toc-item span {color:#197ab6}
+#toc-close {background:#e7f1f9;color:#315a79}
+#help {color:#6e8299}
+
+</style>
+</head>
+<body>
+<div id="viewport"><main id="deck" aria-label="호텔 예약 시스템 설계 발표 자료">
+
+<section class="slide active" id="s1" data-title="호텔 예약 시스템 설계">
+ <div class="cover-orb"></div>
+ <div class="topline"><div class="kicker">ARCHITECTURE STUDY / 01</div><div class="top-meta">SYSTEM DESIGN INTERVIEW</div></div>
+ <div class="cover-content">
+  <div class="overline"><span class="line"></span> SYSTEM DESIGN CASE STUDY</div>
+  <h1>호텔 예약<br><span>시스템 설계</span></h1>
+  <div class="en">Hotel Reservation System</div>
+  <div class="thesis">빠른 검색보다 중요한 것은<br>같은 객실을 <strong style="color:#a7e9cf">두 번 예약하지 않는 것</strong></div>
+  <div class="cover-chips"><span>재고 모델링</span><span>동시성 제어</span><span>확장성 · 정합성</span></div>
+ </div>
+ <div class="cover-art" aria-hidden="true">
+  <div class="artifactbar"><span>INVENTORY STATUS / DELUXE</span><span class="three"><b></b><b></b><b></b></span></div>
+  <div class="art-title">남은 객실 확인</div><div class="art-sub">서울 · 디럭스룸 · 11월 18일 ~ 21일</div>
+  <div class="dategrid">
+   <div class="date-cell"><div class="day">11/18</div><strong>03</strong></div>
+   <div class="date-cell"><div class="day">11/19</div><strong>02</strong></div>
+   <div class="date-cell"><div class="day">11/20</div><strong>05</strong></div>
+   
+  </div>
+  <div class="book-success"><div><strong>예약 가능</strong><small>모든 숙박 날짜의 재고 충족</small></div><div class="roundcheck">✓</div></div>
+ </div>
+ <div class="footer"><span class="accentline"><i class="tick"></i></span><span class="pagenum">01 / 11</span></div>
+</section>
+
+<section class="slide light" id="s2" data-title="문제 정의와 요구사항">
+ <div class="topline"><span class="kicker">01 / PROBLEM</span><span class="top-meta">DESIGN SCOPE</span></div>
+ <div class="heading"><h2>우리가 설계할 서비스의 규모</h2><p>대형 호텔 체인을 가정하되, 핵심은 예약 정확성과 피크 트래픽 대응입니다.</p></div>
+ <div class="stat-grid">
+  <div class="stat-card"><div class="stat-num">5,000</div><div class="stat-label">호텔</div><div class="stat-caption">체인 전체 지점 수</div></div>
+  <div class="stat-card"><div class="stat-num">100만</div><div class="stat-label">전체 객실</div><div class="stat-caption">판매 가능한 객실 규모</div></div>
+  <div class="stat-card"><div class="stat-num">10%</div><div class="stat-label">허용 오버부킹</div><div class="stat-caption">비즈니스 정책에 따른 상한</div></div>
+ </div>
+ <div class="scope-bottom">
+  <div class="scope-panel"><div class="panel-h">주요 기능</div><ul><li>호텔 · 객실 타입 상세 조회</li><li>숙박 날짜별 예약 가능 여부 확인</li><li>예약 · 취소 및 호텔 관리자 기능</li></ul></div>
+  <div class="scope-panel"><div class="panel-h">주요 설계 조건</div><ul><li>동일 객실 재고에 요청이 몰려도 정확해야 함</li><li>일자별 가격 변동, 예약 시 전액 결제</li><li>최대 수 초의 예약 처리 지연은 허용</li></ul></div>
+ </div>
+ <div class="footer"><span class="accentline"><i class="tick"></i> 원문 인터뷰 시나리오의 가정</span><span class="pagenum">02 / 11</span></div>
+</section>
+
+<section class="slide" id="s3" data-title="트래픽 특성">
+ <div class="topline"><span class="kicker">02 / TRAFFIC</span><span class="top-meta">BACK-OF-THE-ENVELOPE</span></div>
+ <div class="heading"><h2>조회는 많고, 실제 예약은 적습니다</h2><p>70% 객실 점유율 · 평균 3박 체류를 가정한 대략적인 트래픽 추정</p></div>
+ <div class="traffic-layout">
+  <div class="funnel">
+   <div class="funnel-piece one"><span class="f-text">호텔 / 객실 상세 조회</span><span class="f-number">300 <small>QPS</small></span></div>
+   <div class="funnel-piece two"><span class="f-text">예약 정보 확인</span><span class="f-number">30 <small>QPS</small></span></div>
+   <div class="funnel-piece three"><span class="f-text">예약 확정</span><span class="f-number">3 <small>TPS</small></span></div>
+   <div style="font-size:18px;color:#8ea6bf;margin-top:9px">각 단계에서 다음 단계로 약 10% 전환한다고 가정</div>
+  </div>
+  <div class="traffic-points">
+   <div class="quote">평균 처리량보다<br><span class="mark">특정 날짜에 몰리는</span><br>동시 요청이 문제</div>
+   <div class="metric"><strong>약 24만 건 / 일</strong><p>100만 객실 × 70% 점유 ÷ 평균 3박</p></div>
+   <div class="explain">평상시 예약 TPS는 낮아도, 프로모션·성수기에는 인기 호텔의 <strong style="color:#d3e9ff">같은 날짜 재고</strong>에 경합이 집중됩니다.</div>
+  </div>
+ </div>
+ <div class="footer"><span class="accentline"><i class="tick"></i> 수치는 원문의 예시 추정치이며 실제 트래픽은 다를 수 있음</span><span class="pagenum">03 / 11</span></div>
+</section>
+
+<section class="slide light" id="s4" data-title="예약 흐름">
+ <div class="topline"><span class="kicker">03 / USER JOURNEY</span><span class="top-meta">BOOKING FLOW</span></div>
+ <div class="heading"><h2>사용자에게는 4단계, 서버에는 여러 검증</h2><p>조회 단계와 실제 예약 트랜잭션을 분리해서 이해하는 것이 출발점입니다.</p></div>
+ <div class="flow-grid">
+  <div class="flow-step"><div class="stepn">01</div><h3>호텔 탐색</h3><p>호텔 정보와<br>객실 타입 확인</p></div>
+  <div class="flow-step"><div class="stepn">02</div><h3>날짜 · 가격 확인</h3><p>체크인 / 체크아웃<br>일자별 요금 조회</p></div>
+  <div class="flow-step"><div class="stepn">03</div><h3>재고 확인 · 예약</h3><p>모든 숙박 날짜 확인 후<br>예약 데이터 생성</p></div>
+  <div class="flow-step"><div class="stepn">04</div><h3>결제 · 확정</h3><p>결제 결과에 따라<br>예약 상태 전환</p></div>
+ </div>
+ <div class="statusflow"><span class="statusbox">PENDING</span><span class="status-arrow">→</span><span class="statusbox success">PAID ✓</span><span style="font-size:21px;color:#9babc0;margin:0 15px">또는</span><span class="statusbox fail">REJECTED / CANCELED</span></div>
+ <div class="status-caption">중복 요청을 막는 예약 ID(멱등키)와 재고 확정 트랜잭션이 중요합니다.</div>
+ <div class="footer"><span class="accentline"><i class="tick"></i> 예약 상태 흐름은 이해를 위한 단순화</span><span class="pagenum">04 / 11</span></div>
+</section>
+
+<section class="slide" id="s5" data-title="전체 아키텍처">
+ <div class="topline"><span class="kicker">04 / ARCHITECTURE</span><span class="top-meta">HIGH-LEVEL DESIGN</span></div>
+ <div class="heading"><h2>책임을 나눈 서비스 아키텍처</h2><p>읽기가 많은 호텔 정보와, 정확성이 중요한 예약·재고 관리를 분리합니다.</p></div>
+ <div class="arch-stage">
+  <svg viewBox="0 0 1400 548" aria-hidden="true">
+   <defs><marker id="arrA" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto"><path d="M0 0 L0 6 L8 3 Z" fill="#77bde6" /></marker></defs>
+   <path d="M370 73 H560" stroke="#77bde6" stroke-width="3" marker-end="url(#arrA)" fill="none"/>
+   <path d="M690 128 V168 H175 M690 168 H1195" stroke="#6599c5" stroke-width="3" fill="none"/>
+   <path d="M175 168 V208 M515 168 V208 M855 168 V208 M1195 168 V208" stroke="#6599c5" stroke-width="3" marker-end="url(#arrA)" fill="none"/>
+   <path d="M175 349 V408 M515 349 V408 M855 349 V408 M1195 349 V408" stroke="#6599c5" stroke-width="3" marker-end="url(#arrA)" fill="none"/>
+   <text x="400" y="54" fill="#9bb8d5" font-size="18" font-weight="700">HTTPS</text>
+  </svg>
+  <div class="arch-node" style="left:70px;top:25px;width:300px;height:97px"><div class="node-label">웹 · 모바일 사용자</div><div class="node-sub">호텔 조회 / 예약 요청</div></div>
+  <div class="arch-node gateway" style="left:560px;top:25px;width:260px;height:103px"><div class="node-label">API Gateway</div><div class="node-sub">인증 · 라우팅 · Rate Limit</div></div>
+  <div class="arch-node service" style="left:25px;top:208px;width:300px;height:141px"><div class="node-label">Hotel Service</div><div class="node-sub">호텔 / 객실 정보</div></div>
+  <div class="arch-node service" style="left:365px;top:208px;width:300px;height:141px"><div class="node-label">Rate Service</div><div class="node-sub">날짜별 객실 요금</div></div>
+  <div class="arch-node reservation" style="left:705px;top:208px;width:300px;height:141px"><div class="node-label">Reservation Service</div><div class="node-sub">예약 + 재고 트랜잭션</div></div>
+  <div class="arch-node service" style="left:1045px;top:208px;width:300px;height:141px"><div class="node-label">Payment Service</div><div class="node-sub">결제 처리 / 상태 전환</div></div>
+  <div class="arch-node storage" style="left:45px;top:408px;width:260px;height:96px"><div class="node-label">Hotel DB + Cache</div><div class="node-sub">정적 조회 가속</div></div>
+  <div class="arch-node storage" style="left:385px;top:408px;width:260px;height:96px"><div class="node-label">Rate DB</div><div class="node-sub">일자별 판매 가격</div></div>
+  <div class="arch-node storage" style="left:725px;top:408px;width:260px;height:96px"><div class="node-label">Reservation DB</div><div class="node-sub">예약 + 타입별 재고</div></div>
+  <div class="arch-node storage" style="left:1065px;top:408px;width:260px;height:96px"><div class="node-label">Payment DB</div><div class="node-sub">결제 이력</div></div>
+  <div class="arch-inset">별도 경로: <strong>호텔 관리자 → 내부 API → 관리 서비스</strong></div>
+ </div>
+ <div class="footer"><span class="accentline"><i class="tick"></i> 개념도 — 실제 서비스 간 내부 호출은 생략</span><span class="pagenum">05 / 11</span></div>
+</section>
+
+<section class="slide light" id="s6" data-title="객실 타입과 날짜별 재고">
+ <div class="topline"><span class="kicker">05 / DATA MODEL</span><span class="top-meta">ROOM TYPE INVENTORY</span></div>
+ <div class="heading"><h2>예약 대상은 ‘객실 번호’가 아닙니다</h2><p><strong class="mark">객실 타입 × 숙박 날짜</strong>마다 판매 가능 수량을 관리합니다.</p></div>
+ <div class="model-grid">
+  <div class="model-left">
+   <div class="model-panel"><div class="over">HOTEL / DELUXE TYPE</div><h3>디럭스룸 100개</h3><div class="rooms"><div class="room">301호</div><div class="room pick">302호</div><div class="room">303호</div></div><div class="hint">예약 시점에는 <strong>호수가 아닌 타입</strong>을 선택하고, 실제 객실은 체크인할 때 배정할 수 있습니다.</div></div>
+   <div class="model-panel"><div class="over">PRIMARY KEY</div><h3>hotel_id + room_type_id + date</h3><div class="hint">같은 호텔·객실 타입이라도<br><strong>하루마다 잔여 재고가 다릅니다.</strong></div></div>
+  </div>
+  <div class="inventory-panel">
+   <div class="inventory-title"><h3>room_type_inventory</h3><span class="key">예시 데이터 / 객실 타입: DELUXE</span></div>
+   <table class="inv-table"><thead><tr><th>숙박 날짜</th><th>총 재고</th><th>예약 완료</th><th>잔여</th></tr></thead><tbody>
+    <tr><td>11월 18일</td><td>100</td><td>97</td><td class="left">3</td></tr>
+    <tr><td>11월 19일</td><td>100</td><td>98</td><td class="left">2</td></tr>
+    <tr><td>11월 20일</td><td>100</td><td>95</td><td class="left">5</td></tr>
+   </tbody></table>
+   <div class="model-note"><span style="font-size:29px">✓</span><span>11/18 체크인 ~ 11/21 체크아웃, 2개 예약 →<br>3일 모두 잔여가 2개 이상이므로 가능</span></div>
+  </div>
+ </div>
+ <div class="footer"><span class="accentline"><i class="tick"></i> 숙박 날짜 범위에서 체크아웃 날짜는 제외</span><span class="pagenum">06 / 11</span></div>
+</section>
+
+<section class="slide" id="s7" data-title="중복 예약과 경합">
+ <div class="topline"><span class="kicker">06 / CONCURRENCY</span><span class="top-meta">DOUBLE BOOKING</span></div>
+ <div class="heading"><h2>마지막 1개 객실, 두 명이 동시에 예약한다면?</h2><p>조회 당시 재고가 같아도, 요청을 그대로 승인하면 의도하지 않은 중복 예약이 발생합니다.</p></div>
+ <div class="race-layout">
+  <div class="race-diagram">
+   <svg class="race-lines" viewBox="0 0 790 435" aria-hidden="true"><defs><marker id="raceArr" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0 0 L0 6 L8 3Z" fill="#f6a4a1" /></marker></defs><path d="M395 105 V127 H188 V166" fill="none" stroke="#7aa9cc" stroke-width="3"/><path d="M395 127 H602 V166" fill="none" stroke="#7aa9cc" stroke-width="3"/><path d="M188 278 V304 H395 V334" fill="none" stroke="#f6a4a1" stroke-width="3" marker-end="url(#raceArr)"/><path d="M602 278 V304 H395" fill="none" stroke="#f6a4a1" stroke-width="3"/></svg>
+   <div class="last-room">남은 객실 <span>1개</span></div>
+   <div class="race-people"><div class="race-person"><div class="p-icon">◉</div><h4>사용자 A</h4><p>"1개 남았네"</p></div><div class="race-person"><div class="p-icon">◉</div><h4>사용자 B</h4><p>"1개 남았네"</p></div></div>
+   <div class="race-failure">✕ 둘 다 예약 승인 → 재고 불일치</div>
+  </div>
+  <div class="race-right">
+   <div class="bigquote">문제는 <span class="orange">두 종류</span>입니다.</div>
+   <div class="race-item"><h4>01. 같은 사용자의 중복 클릭</h4><p>같은 예약 요청이 여러 번 도착 → <strong>reservation_id 멱등키</strong>로 중복 생성 방지</p></div>
+   <div class="race-item"><h4>02. 서로 다른 사용자의 동시 요청</h4><p>재고를 동시에 조회한 뒤 갱신 → <strong>DB 트랜잭션의 동시성 제어</strong>가 필요</p></div>
+  </div>
+ </div>
+ <div class="footer"><span class="accentline"><i class="tick"></i> 여기서의 중복 예약은 정책상 허용된 오버부킹과 별개</span><span class="pagenum">07 / 11</span></div>
+</section>
+
+<section class="slide light" id="s8" data-title="동시성 제어 전략">
+ <div class="topline"><span class="kicker">07 / CORRECTNESS</span><span class="top-meta">CONCURRENCY CONTROL</span></div>
+ <div class="heading"><h2>재고 확인과 갱신을 안전하게 묶기</h2><p>일반적인 3가지 접근법 — 실제 선택은 충돌 빈도와 DB 동작에 따라 달라집니다.</p></div>
+ <div class="lock-grid">
+  <div class="lock-card"><span class="badge">PESSIMISTIC</span><h3>비관적 락</h3><div class="code-line">SELECT ... FOR UPDATE</div><p>충돌 가능성이 큰 재고 행을 먼저 잠가 다른 트랜잭션을 대기시킵니다.</p><div class="trade">장점: 강한 직렬화 / 유의: 대기·교착</div></div>
+  <div class="lock-card"><span class="badge">OPTIMISTIC</span><h3>낙관적 락</h3><div class="code-line">WHERE version = :old</div><p>버전으로 충돌을 감지하고, 실패한 요청은 재조회·재시도합니다.</p><div class="trade">장점: 낮은 경합에 적합 / 유의: 재시도</div></div>
+  <div class="lock-card"><span class="badge">DB GUARANTEE</span><h3>조건부 갱신 · 제약</h3><div class="code-line">UPDATE ... WHERE 여유재고 ≥ 수량</div><p>재고 상한을 DB가 검사합니다. 변경 행 수와 제약 위반을 확인합니다.</p><div class="trade">장점: 단순한 최종 방어 / 유의: DB별 차이</div></div>
+ </div>
+ <div class="lock-reco"><span class="circle">✓</span><p>설계 원칙: <strong>전체 숙박 날짜의 재고 갱신 + 예약 생성</strong>을 하나의 DB 트랜잭션으로 처리하고, 멱등키를 별도로 보장합니다.</p></div>
+ <div class="footer"><span class="accentline"><i class="tick"></i> 조건부 갱신은 원문의 DB 제약 방식에 실무적 구현 예시를 추가한 것</span><span class="pagenum">08 / 11</span></div>
+</section>
+
+<section class="slide" id="s9" data-title="Redis와 데이터 일관성">
+ <div class="topline"><span class="kicker">08 / CACHE</span><span class="top-meta">REDIS VS DATABASE</span></div>
+ <div class="heading"><h2>Redis는 빠른 조회, DB는 최종 확정</h2><p>캐시가 조금 오래된 재고를 보여줄 수 있어도, 중복 예약까지 허용해서는 안 됩니다.</p></div>
+ <div class="cache-grid">
+  <div class="cache-diagram">
+   <svg viewBox="0 0 870 420" aria-hidden="true"><defs><marker id="cacheArrow" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0 0 L0 6 L8 3Z" fill="#94cef7" /></marker><marker id="cacheArrowG" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0 0 L0 6 L8 3Z" fill="#a0e8c5" /></marker></defs>
+    <path d="M218 183 H280 V86 H352" stroke="#94cef7" stroke-width="3" fill="none" marker-end="url(#cacheArrow)"/>
+    <path d="M218 223 H280 V333 H352" stroke="#94cef7" stroke-width="3" fill="none" marker-end="url(#cacheArrow)"/>
+    <path d="M474 289 V147" stroke="#a0e8c5" stroke-width="3" stroke-dasharray="8 9" fill="none" marker-end="url(#cacheArrowG)"/>
+    <text x="215" y="70" fill="#b5d9f9" font-size="19" font-weight="800">① 조회</text>
+    <text x="215" y="373" fill="#b5d9f9" font-size="19" font-weight="800">② 확정</text>
+    <text x="525" y="225" fill="#a2efd4" font-size="18" font-weight="700">③ 비동기 반영</text>
+   </svg>
+   <div class="cache-node client">Reservation<br>Service<small>조회 / 예약 요청</small></div>
+   <div class="cache-node redis">Redis Cache<small>빠른 잔여 재고 조회</small></div>
+   <div class="cache-node db">Inventory DB<small>정합성 최종 검증</small></div>
+  </div>
+  <div class="cache-list">
+   <div class="point"><h4>Redis · 읽기 최적화</h4><p>hotel_id · room_type_id · date로 잔여 재고를 캐싱합니다.</p></div>
+   <div class="point"><h4>RDB · Source of Truth</h4><p>예약 시 <span class="emph">최종 재고 재확인</span>과 갱신을 DB 트랜잭션으로 처리합니다.</p></div>
+   <div class="point"><h4>캐시 최신화</h4><p>DB 반영 후 무효화, 비동기 갱신 또는 CDC 방식으로 동기화합니다.</p></div>
+  </div>
+ </div>
+ <div class="cache-banner">핵심 원칙&nbsp; <span style="color:#fff">캐시 결과 = 예약 가능성의 힌트</span> &nbsp;·&nbsp; <span style="color:#fff">DB 결과 = 최종 확정</span></div>
+ <div class="footer"><span class="accentline"><i class="tick"></i> TTL은 캐시 데이터 만료를 돕지만 DB 정합성 검증을 대체하지 않음</span><span class="pagenum">09 / 11</span></div>
+</section>
+
+<section class="slide light" id="s10" data-title="확장과 분산 정합성">
+ <div class="topline"><span class="kicker">09 / SCALE & CONSISTENCY</span><span class="top-meta">TRADE-OFFS</span></div>
+ <div class="heading"><h2>트래픽이 커지면, 어디를 확장할까?</h2><p>서비스는 수평 확장하고, 데이터 저장소는 <strong class="mark">분할 기준과 트랜잭션 경계</strong>를 정합니다.</p></div>
+ <div class="scale-panels">
+  <div class="scale-panel"><h3>확장 전략</h3><p class="intro">병목이 발생한 지점을 중심으로 점진적으로 확장</p>
+   <div class="scale-feature"><span class="icon">↗</span><div><strong>Stateless 서비스 수평 확장</strong><p>인스턴스 추가로 읽기 및 API 트래픽 분산</p></div></div>
+   <div class="scale-feature"><span class="icon">#</span><div><strong>hotel_id 기반 DB 샤딩</strong><p>호텔 단위로 트래픽·재고 데이터 분산</p></div></div>
+   <div class="scale-feature"><span class="icon">⌁</span><div><strong>캐시 · 과거 데이터 분리</strong><p>읽기 부담 경감, 오래된 예약 이력 보관</p></div></div>
+  </div>
+  <div class="scale-panel"><h3>분산 정합성 전략</h3><p class="intro">모든 기능을 독립 DB로 쪼갤 필요는 없음</p>
+   <div class="scale-feature"><span class="icon">✓</span><div><strong>예약 + 재고는 같은 DB</strong><p>단일 트랜잭션으로 재고 차감과 예약 기록</p></div></div>
+   <div class="scale-feature"><span class="icon">↔</span><div><strong>결제는 별도 서비스</strong><p>실패 · 취소에 대한 상태 전환과 재고 복원 설계</p></div></div>
+   <div class="scale-feature"><span class="icon">↺</span><div><strong>필요할 때 Saga</strong><p>서비스 간 보상 트랜잭션으로 최종 일관성 확보</p></div></div>
+  </div>
+ </div>
+ <div class="footer"><span class="accentline"><i class="tick"></i> 분산 설계는 데이터 정합성 복잡도를 함께 증가시킴</span><span class="pagenum">10 / 11</span></div>
+</section>
+
+<section class="slide" id="s11" data-title="핵심 정리">
+ <div class="topline"><span class="kicker">10 / WRAP-UP</span><span class="top-meta">KEY TAKEAWAYS</span></div>
+ <div class="end-head">ARCHITECTURE DECISIONS</div>
+ <h2 class="end-title">핵심은 속도가 아니라<br><em>예약의 정확성</em>입니다.</h2>
+ <div class="end-list">
+  <div class="end-point"><span class="n">01 / MODEL</span><h4>객실 타입 × 날짜</h4><p>객실 호수가 아닌 날짜별 재고를<br>예약 단위로 모델링</p></div>
+  <div class="end-point"><span class="n">02 / SAFETY</span><h4>중복·경합을 DB에서 차단</h4><p>멱등키 + 동시성 제어 +<br>원자적 트랜잭션</p></div>
+  <div class="end-point"><span class="n">03 / SCALE</span><h4>확장은 단계적으로</h4><p>Redis 캐시 → 서비스 확장 →<br>호텔 ID 기반 샤딩</p></div>
+ </div>
+ <div class="footer"><span class="accentline"><i class="tick"></i> 감사합니다 · Q&A</span><span class="pagenum">11 / 11</span></div>
+</section>
+</main></div>
+
+<div id="progress" aria-hidden="true"></div>
+<div id="controls" aria-label="슬라이드 탐색">
+ <button class="navbtn" id="prev" title="이전 슬라이드 (←)" aria-label="이전 슬라이드">←</button>
+ <button class="navbtn" id="toc-btn" title="목차 (O)" aria-label="목차 열기">☷</button>
+ <span id="counter" aria-live="polite">01 / 11</span>
+ <button class="navbtn" id="next" title="다음 슬라이드 (→)" aria-label="다음 슬라이드">→</button>
+ <button class="navbtn" id="fs" title="전체 화면 (F)" aria-label="전체 화면">⛶</button>
+</div>
+<div id="help">← → / Space: 이동 &nbsp;·&nbsp; O: 목차 &nbsp;·&nbsp; F: 전체 화면</div>
+<div id="toc" role="dialog" aria-modal="true" aria-label="슬라이드 목차"><div id="toc-panel"><button id="toc-close" aria-label="닫기">닫기 ✕</button><h2>발표 목차</h2><div id="toc-items"></div></div></div>
+<script>
+(function(){
+ const W=1600,H=900,slides=[...document.querySelectorAll('.slide')],deck=document.getElementById('deck');
+ let current=0;const counter=document.getElementById('counter'),progress=document.getElementById('progress'),toc=document.getElementById('toc');
+ function fit(){const scale=Math.min(window.innerWidth/W,window.innerHeight/H);deck.style.transform=`scale(${scale})`;}
+ function render(index){current=Math.max(0,Math.min(index,slides.length-1));slides.forEach((el,i)=>{el.classList.toggle('active',i===current);el.setAttribute('aria-hidden',String(i!==current));});counter.textContent=String(current+1).padStart(2,'0')+' / '+String(slides.length).padStart(2,'0');progress.style.width=(((current+1)/slides.length)*100)+'%';document.title=slides[current].dataset.title+' | 호텔 예약 시스템';}
+ function go(n){render(n);closeToc()}
+ function openToc(){toc.classList.add('open');document.getElementById('toc-close').focus()}
+ function closeToc(){toc.classList.remove('open')}
+ document.getElementById('prev').addEventListener('click',()=>go(current-1));
+ document.getElementById('next').addEventListener('click',()=>go(current+1));
+ document.getElementById('toc-btn').addEventListener('click',openToc);
+ document.getElementById('toc-close').addEventListener('click',closeToc);
+ toc.addEventListener('click',(e)=>{if(e.target===toc)closeToc()});
+ document.getElementById('fs').addEventListener('click',()=>{if(!document.fullscreenElement){document.documentElement.requestFullscreen?.()}else{document.exitFullscreen?.()}});
+ const items=document.getElementById('toc-items');slides.forEach((el,i)=>{const b=document.createElement('button');b.className='toc-item';b.innerHTML='<span>'+String(i+1).padStart(2,'0')+'</span>'+el.dataset.title;b.addEventListener('click',()=>go(i));items.appendChild(b)});
+ document.addEventListener('keydown',(e)=>{if(['INPUT','TEXTAREA'].includes(document.activeElement?.tagName))return; if(toc.classList.contains('open')){if(e.key==='Escape')closeToc();return;}if(['ArrowRight','ArrowDown',' ','PageDown'].includes(e.key)){e.preventDefault();go(current+1)}else if(['ArrowLeft','ArrowUp','PageUp','Backspace'].includes(e.key)){e.preventDefault();go(current-1)}else if(e.key==='Home'){go(0)}else if(e.key==='End'){go(slides.length-1)}else if(e.key.toLowerCase()==='o'){openToc()}else if(e.key.toLowerCase()==='f'){document.getElementById('fs').click()}});
+ let touchX=null;document.addEventListener('touchstart',e=>{touchX=e.changedTouches[0].screenX},{passive:true});document.addEventListener('touchend',e=>{if(touchX===null)return;const dx=e.changedTouches[0].screenX-touchX;if(Math.abs(dx)>70)go(current+(dx<0?1:-1));touchX=null},{passive:true});
+ window.addEventListener('resize',fit);fit();render(0);
+})();
+</script>
+</body>
+</html>

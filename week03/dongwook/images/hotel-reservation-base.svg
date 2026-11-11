@@ -1,0 +1,86 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1220" height="770" viewBox="0 0 1220 770" role="img" aria-labelledby="title desc">
+<title id="title">일반적인 호텔 예약 시스템</title>
+<desc id="desc">사용자와 관리자가 API Gateway에 접근한다. 호텔·요금 서비스는 DB와 Redis를 사용한다. 예약 서비스는 예약·재고 DB를, 결제 서비스는 결제 DB와 PG를 사용한다. 두 DB의 Outbox에서 메시지 큐로 이벤트를 전달한다.</desc>
+<style>text{font-family:Arial,"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",sans-serif;fill:#252525}path,line,rect,ellipse,polygon{stroke-linejoin:round}</style>
+<rect width="1220" height="770" fill="white"/>
+<path d="M 220 62 L 510 62" fill="none" stroke="#252525" stroke-width="1.35"/>
+<polygon points="510,62 502.0,65.5 502.0,58.5" fill="#252525"/>
+<path d="M 1000 62 L 730 62" fill="none" stroke="#252525" stroke-width="1.35"/>
+<polygon points="730,62 738.0,58.5 738.0,65.5" fill="#252525"/>
+<rect x="348.4" y="36" width="33.1" height="18" fill="white"/>
+<text x="365" y="50" text-anchor="middle" font-size="14" font-weight="400" style="fill:#666666">API</text>
+<rect x="830.6" y="36" width="68.8" height="18" fill="white"/>
+<text x="865" y="50" text-anchor="middle" font-size="14" font-weight="400" style="fill:#666666">관리 API</text>
+<path d="M 145 84 L 145 124" fill="none" stroke="#252525" stroke-width="1.35"/>
+<polygon points="145,124 141.5,116.0 148.5,116.0" fill="#252525"/>
+<path d="M 620 84 L 620 190 L 185 190 L 185 245" fill="none" stroke="#252525" stroke-width="1.35"/>
+<polygon points="185,245 181.5,237.0 188.5,237.0" fill="#252525"/>
+<path d="M 620 190 L 620 245" fill="none" stroke="#252525" stroke-width="1.35"/>
+<polygon points="620,245 616.5,237.0 623.5,237.0" fill="#252525"/>
+<path d="M 620 190 L 1035 190 L 1035 245" fill="none" stroke="#252525" stroke-width="1.35"/>
+<polygon points="1035,245 1031.5,237.0 1038.5,237.0" fill="#252525"/>
+<path d="M 500 274 L 300 274" fill="none" stroke="#252525" stroke-width="1.35"/>
+<polygon points="300,274 308.0,270.5 308.0,277.5" fill="#252525"/>
+<rect x="363.1" y="248" width="73.7" height="18" fill="white"/>
+<text x="400" y="262" text-anchor="middle" font-size="14" font-weight="400" style="fill:#666666">견적 확인</text>
+<path d="M 150 303 L 150 400" fill="none" stroke="#252525" stroke-width="1.35"/>
+<polygon points="150,400 146.5,392.0 153.5,392.0" fill="#252525"/>
+<path d="M 260 303 L 260 350 L 345 350 L 345 400" fill="none" stroke="#252525" stroke-width="1.35"/>
+<polygon points="345,400 341.5,392.0 348.5,392.0" fill="#252525"/>
+<path d="M 620 303 L 620 400" fill="none" stroke="#252525" stroke-width="1.35"/>
+<polygon points="620,400 616.5,392.0 623.5,392.0" fill="#252525"/>
+<path d="M 1035 303 L 1035 400" fill="none" stroke="#252525" stroke-width="1.35"/>
+<polygon points="1035,400 1031.5,392.0 1038.5,392.0" fill="#252525"/>
+<path d="M 1150 274 L 1190 274 L 1190 595 L 1150 595" fill="none" stroke="#252525" stroke-width="1.35"/>
+<polygon points="1150,595 1158.0,591.5 1158.0,598.5" fill="#252525"/>
+<polygon points="1150,274 1158.0,270.5 1158.0,277.5" fill="#252525"/>
+<path d="M 620 485 L 620 570" fill="none" stroke="#252525" stroke-width="1.35" stroke-dasharray="6 4"/>
+<polygon points="620,570 616.5,562.0 623.5,562.0" fill="#252525"/>
+<path d="M 920 442 L 825 442 L 825 595 L 740 595" fill="none" stroke="#252525" stroke-width="1.35" stroke-dasharray="6 4"/>
+<polygon points="740,595 748.0,591.5 748.0,598.5" fill="#252525"/>
+<rect x="591.9" y="523" width="56.2" height="18" fill="white"/>
+<text x="620" y="537" text-anchor="middle" font-size="14" font-weight="400" style="fill:#666666">Outbox</text>
+<rect x="796.9" y="521" width="56.2" height="18" fill="white"/>
+<text x="825" y="535" text-anchor="middle" font-size="14" font-weight="400" style="fill:#666666">Outbox</text>
+<path d="M 620 620 L 620 680" fill="none" stroke="#252525" stroke-width="1.35" stroke-dasharray="6 4"/>
+<polygon points="620,680 616.5,672.0 623.5,672.0" fill="#252525"/>
+<path d="M 500 705 L 300 705" fill="none" stroke="#252525" stroke-width="1.35" stroke-dasharray="6 4"/>
+<polygon points="300,705 308.0,701.5 308.0,708.5" fill="#252525"/>
+<rect x="70" y="40" width="150" height="44" fill="white" stroke="#252525" stroke-width="1.35"/>
+<text x="145.0" y="68.0" text-anchor="middle" font-size="18" font-weight="400" style="fill:#252525">사용자</text>
+<rect x="510" y="40" width="220" height="44" fill="white" stroke="#252525" stroke-width="1.35"/>
+<text x="620.0" y="68.0" text-anchor="middle" font-size="18" font-weight="400" style="fill:#252525">API Gateway</text>
+<rect x="1000" y="40" width="150" height="44" fill="white" stroke="#252525" stroke-width="1.35"/>
+<text x="1075.0" y="68.0" text-anchor="middle" font-size="18" font-weight="400" style="fill:#252525">관리자</text>
+<rect x="70" y="124" width="150" height="44" fill="white" stroke="#252525" stroke-width="1.35"/>
+<text x="145.0" y="152.0" text-anchor="middle" font-size="18" font-weight="400" style="fill:#252525">CDN</text>
+<rect x="70" y="245" width="230" height="58" fill="white" stroke="#252525" stroke-width="1.35"/>
+<text x="185.0" y="280.0" text-anchor="middle" font-size="18" font-weight="400" style="fill:#252525">호텔·요금 서비스</text>
+<rect x="500" y="245" width="240" height="58" fill="white" stroke="#252525" stroke-width="1.35"/>
+<text x="620.0" y="280.0" text-anchor="middle" font-size="18" font-weight="400" style="fill:#252525">예약 서비스</text>
+<rect x="920" y="245" width="230" height="58" fill="white" stroke="#252525" stroke-width="1.35"/>
+<text x="1035.0" y="280.0" text-anchor="middle" font-size="18" font-weight="400" style="fill:#252525">결제 서비스</text>
+<path d="M 70 409 C 70 397 230 397 230 409 V 466 C 230 478 70 478 70 466 Z" fill="white" stroke="#252525" stroke-width="1.35"/>
+<path d="M 70 409 C 70 421 230 421 230 409" fill="none" stroke="#252525" stroke-width="1.1"/>
+<text x="150.0" y="448.5" text-anchor="middle" font-size="17" font-weight="400" style="fill:#252525">호텔·요금 DB</text>
+<path d="M 280 409 C 280 397 410 397 410 409 V 466 C 410 478 280 478 280 466 Z" fill="white" stroke="#252525" stroke-width="1.35"/>
+<path d="M 280 409 C 280 421 410 421 410 409" fill="none" stroke="#252525" stroke-width="1.1"/>
+<text x="345.0" y="448.5" text-anchor="middle" font-size="17" font-weight="400" style="fill:#252525">Redis</text>
+<path d="M 510 409 C 510 397 730 397 730 409 V 476 C 730 488 510 488 510 476 Z" fill="white" stroke="#252525" stroke-width="1.35"/>
+<path d="M 510 409 C 510 421 730 421 730 409" fill="none" stroke="#252525" stroke-width="1.1"/>
+<text x="620.0" y="442" text-anchor="middle" font-size="18" font-weight="400" style="fill:#252525">예약 DB</text>
+<text x="620.0" y="463" text-anchor="middle" font-size="14" font-weight="400" style="fill:#666666">예약 · 재고 · Outbox</text>
+<path d="M 920 409 C 920 397 1150 397 1150 409 V 476 C 1150 488 920 488 920 476 Z" fill="white" stroke="#252525" stroke-width="1.35"/>
+<path d="M 920 409 C 920 421 1150 421 1150 409" fill="none" stroke="#252525" stroke-width="1.1"/>
+<text x="1035.0" y="442" text-anchor="middle" font-size="18" font-weight="400" style="fill:#252525">결제 DB</text>
+<text x="1035.0" y="463" text-anchor="middle" font-size="14" font-weight="400" style="fill:#666666">결제 · 환불 · Outbox</text>
+<rect x="500" y="570" width="240" height="50" fill="white" stroke="#252525" stroke-width="1.35"/>
+<text x="620.0" y="601.0" text-anchor="middle" font-size="18" font-weight="400" style="fill:#252525">Outbox Relay</text>
+<rect x="920" y="570" width="230" height="50" fill="white" stroke="#252525" stroke-width="1.35"/>
+<text x="1035.0" y="601.0" text-anchor="middle" font-size="18" font-weight="400" style="fill:#252525">외부 PG</text>
+<rect x="500" y="680" width="240" height="50" fill="white" stroke="#252525" stroke-width="1.35"/>
+<text x="620.0" y="711.0" text-anchor="middle" font-size="18" font-weight="400" style="fill:#252525">메시지 큐</text>
+<rect x="70" y="680" width="230" height="50" fill="white" stroke="#252525" stroke-width="1.35"/>
+<text x="185.0" y="711.0" text-anchor="middle" font-size="18" font-weight="400" style="fill:#252525">이벤트 소비자</text>
+<text x="185" y="754" text-anchor="middle" font-size="14" font-weight="400" style="fill:#666666">예약 확정 · 환불 · 알림</text>
+</svg>
