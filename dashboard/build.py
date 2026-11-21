@@ -40,6 +40,7 @@ IMAGE_ATTRIBUTE = re.compile(r"""\s(src|alt)\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>
 IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg", ".webp", ".gif", ".svg", ".avif"}
 MARKDOWN = MarkdownIt("commonmark", {"html": False}).enable(["table", "strikethrough"]).disable("image")
 DESIGN_MARKDOWN_FIELDS = ("architecture", "decision", "tradeoff")
+OFFLINE_MEETING_DATE = date(2026, 12, 5)
 
 
 def normalized(text):
@@ -354,12 +355,12 @@ def build_model(topics, snapshot, read, today, cache_dir=None):
         }
         topic["comparison"] = compare_topic(topic["title"], topic["designs"], trusted_designs, cache_dir)
     # Keep the agenda available through the end of the meeting's local day.
-    meeting_week = max(2, (today - meeting_date(2)).days // 7 + 2)
-    if meeting_date(meeting_week) < today:
-        meeting_week += 1
+    meetings = [(meeting_date(week), week) for week in range(2, 8)] + [(OFFLINE_MEETING_DATE, 8)]
+    meeting_day, meeting_week = min((item for item in meetings if item[0] >= today), default=max(meetings))
     return {
         "repoUrl": f"https://github.com/{repo}", "meetingWeek": meeting_week,
-        "meetingDate": meeting_date(meeting_week).isoformat(), "topics": list(result.values()),
+        "meetingDate": meeting_day.isoformat(), "offlineMeetingDate": OFFLINE_MEETING_DATE.isoformat(),
+        "topics": list(result.values()),
         "unassigned": unassigned, "capturedAt": snapshot.get("captured_at"), "today": today.isoformat(),
     }
 

@@ -37,7 +37,7 @@
             <span class="study-meeting-date" data-selected-date></span>
           </div>
           <div class="study-agenda">
-            <section aria-labelledby="study-sharing-title">
+            <section aria-labelledby="study-sharing-title" data-sharing-section>
               <h2 id="study-sharing-title">설계 공유</h2>
               <p class="study-muted">이전 모임에서 발표한 주제의 PR을 비교합니다.</p>
               <div data-sharing></div>
@@ -641,7 +641,8 @@
   const meetings = Array.from({length: 9 - startWeek}, (_, index) => {
     const date = new Date(firstMeeting);
     date.setUTCDate(date.getUTCDate() + (index + startWeek - 1) * 7);
-    return {week: index + startWeek, date: date.toISOString().slice(0, 10)};
+    const week = index + startWeek;
+    return {week, date: week === 8 && data.offlineMeetingDate ? data.offlineMeetingDate : date.toISOString().slice(0, 10)};
   });
   const initialWeek = Math.max(startWeek, Math.min(8,
     data.initialMeetingWeek || (data.reviewWeek ? data.reviewWeek + 1 : data.meetingWeek)));
@@ -732,7 +733,7 @@
       const todayAttribute = iso === today ? ' data-today' : '';
       if (!meeting) return '<div class="study-calendar-day"' + todayAttribute + '>' + date + '</div>';
       const newTopics = data.topics.filter(topic => topic.week === meeting.week);
-      const names = meeting.week === 8 ? '트래픽 버티기 챌린지' :
+      const names = meeting.week === 8 ? '트래픽 버티기 챌린지 (예정)' :
         newTopics.map(topic => topic.title).join(' · ');
       return '<button type="button" class="study-calendar-day" data-week="' + meeting.week +
         '" aria-pressed="' + (selectedWeek === meeting.week) + '" aria-label="' +
@@ -745,9 +746,11 @@
 
   function renderAgenda() {
     const meeting = meetings.find(meeting => meeting.week === selectedWeek);
-    root.querySelector('[data-meeting-title]').textContent = selectedWeek + '주차 모임';
-    root.querySelector('[data-selected-date]').textContent = day(meeting.date);
-    const sharing = data.topics.filter(topic => topic.week === selectedWeek - 1);
+    const isOffline = selectedWeek === 8;
+    root.querySelector('[data-meeting-title]').textContent = selectedWeek + (isOffline ? '주차 오프라인 모임' : '주차 모임');
+    root.querySelector('[data-selected-date]').textContent = day(meeting.date) + (isOffline ? ' · 예정' : '');
+    root.querySelector('[data-sharing-section]').hidden = isOffline;
+    const sharing = isOffline ? [] : data.topics.filter(topic => topic.week === selectedWeek - 1);
     root.querySelector('[data-sharing]').innerHTML = sharing.map(topic =>
       '<article class="study-feature"><div><p class="study-kicker">' + topic.week + '주차 발표 · ' +
       day(topic.presentationDate) + '</p><h3>' + escapeHtml(topic.title) +
@@ -758,10 +761,9 @@
       topicButton(topic, true, '설계 비교 열기') + '</article>'
     ).join('') || '<p class="study-muted study-next">' +
       (selectedWeek === startWeek ? '2주차부터 주제 학습을 시작합니다. 이번 발표를 듣고 다음 모임에서 설계를 공유합니다.' : '지난주 설계 공유 주제가 없습니다.') + '</p>';
-    const isOffline = selectedWeek === 8;
     root.querySelector('[data-agenda-next-title]').textContent = isOffline ? '오프라인 활동' : '새 주제 발표';
     root.querySelector('[data-agenda-next-description]').textContent = isOffline ?
-      '마지막 모임은 팀별 트래픽 버티기 챌린지로 진행합니다. 장소와 세부 시간은 추후 확정합니다.' :
+      '팀별 트래픽 버티기 챌린지입니다. 장소와 시작 시각은 추후 안내합니다.' :
       '이번 모임의 발표를 듣고, 다음 모임까지 설계합니다.';
     const next = data.topics.filter(topic => topic.week === selectedWeek);
     root.querySelector('[data-next]').innerHTML = isOffline ? '<li><strong>트래픽 버티기 챌린지</strong></li>' :
@@ -772,7 +774,7 @@
         const names = presenterNames([topic]);
         return '<span>' + escapeHtml(topic.title) +
           (names ? ' <span class="study-week-presenters">— ' + escapeHtml(names) + '</span>' : '') + '</span>';
-      }).join('') || '<span>' + (item.week === 8 ? '트래픽 버티기 챌린지' : '주제 조율') + '</span>';
+      }).join('') || '<span>' + (item.week === 8 ? '트래픽 버티기 챌린지 (예정)' : '주제 조율') + '</span>';
       return '<button type="button" class="study-week-link" data-week="' + item.week +
         '" aria-pressed="' + (item.week === selectedWeek) + '"><span class="study-week-heading"><strong>' + item.week +
         '주차</strong><time datetime="' + item.date + '">' + day(item.date) +
