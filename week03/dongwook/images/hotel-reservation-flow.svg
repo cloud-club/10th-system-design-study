@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1140" height="965" viewBox="0 0 1140 965" role="img" aria-labelledby="title desc">
+<title id="title">재고 확보와 결제 처리 시퀀스</title>
+<desc id="desc">재고 임시 확보를 커밋하고, 결제 작업과 고정 작업 키를 저장한 뒤 PG를 호출한다. 결제 결과와 Outbox를 함께 저장해 이벤트를 전달한다. 예약 서비스는 상태 전이 시점에 유효한 임시 확보를 확정한다.</desc>
+<style>text{font-family:Arial,"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",sans-serif;fill:#252525}path,line,rect,ellipse,polygon{stroke-linejoin:round}</style>
+<rect width="1140" height="965" fill="white"/>
+<line x1="70" y1="64" x2="70" y2="935" stroke="#999999" stroke-width="1" stroke-dasharray="5 5"/>
+<line x1="315" y1="64" x2="315" y2="935" stroke="#999999" stroke-width="1" stroke-dasharray="5 5"/>
+<line x1="540" y1="64" x2="540" y2="935" stroke="#999999" stroke-width="1" stroke-dasharray="5 5"/>
+<line x1="780" y1="64" x2="780" y2="935" stroke="#999999" stroke-width="1" stroke-dasharray="5 5"/>
+<line x1="1040" y1="64" x2="1040" y2="935" stroke="#999999" stroke-width="1" stroke-dasharray="5 5"/>
+<rect x="311" y="100" width="8" height="166" fill="white" stroke="#252525" stroke-width="1.35"/>
+<rect x="536" y="155" width="8" height="65" fill="white" stroke="#252525" stroke-width="1.35"/>
+<rect x="776" y="300" width="8" height="350" fill="white" stroke="#252525" stroke-width="1.35"/>
+<rect x="311" y="355" width="8" height="60" fill="white" stroke="#252525" stroke-width="1.35"/>
+<rect x="1036" y="500" width="8" height="75" fill="white" stroke="#252525" stroke-width="1.35"/>
+<rect x="311" y="680" width="8" height="130" fill="white" stroke="#252525" stroke-width="1.35"/>
+<rect x="536" y="735" width="8" height="75" fill="white" stroke="#252525" stroke-width="1.35"/>
+<rect x="311" y="840" width="8" height="64" fill="white" stroke="#252525" stroke-width="1.35"/>
+<rect x="20.0" y="20" width="100" height="44" fill="white" stroke="#252525" stroke-width="1.35"/>
+<text x="70.0" y="48.0" text-anchor="middle" font-size="18" font-weight="400" style="fill:#252525">사용자</text>
+<rect x="240.0" y="20" width="150" height="44" fill="white" stroke="#252525" stroke-width="1.35"/>
+<text x="315.0" y="48.0" text-anchor="middle" font-size="18" font-weight="400" style="fill:#252525">예약 서비스</text>
+<rect x="465.0" y="20" width="150" height="44" fill="white" stroke="#252525" stroke-width="1.35"/>
+<text x="540.0" y="48.0" text-anchor="middle" font-size="18" font-weight="400" style="fill:#252525">예약 DB</text>
+<rect x="705.0" y="20" width="150" height="44" fill="white" stroke="#252525" stroke-width="1.35"/>
+<text x="780.0" y="48.0" text-anchor="middle" font-size="18" font-weight="400" style="fill:#252525">결제 서비스</text>
+<rect x="975.0" y="20" width="130" height="44" fill="white" stroke="#252525" stroke-width="1.35"/>
+<text x="1040.0" y="48.0" text-anchor="middle" font-size="18" font-weight="400" style="fill:#252525">외부 PG</text>
+<path d="M 74 110 L 311 110" fill="none" stroke="#252525" stroke-width="1.35"/>
+<polygon points="311,110 303.0,113.5 303.0,106.5" fill="#252525"/>
+<text x="192.5" y="100" text-anchor="middle" font-size="15" font-weight="400" style="fill:#252525">예약 생성</text>
+<path d="M 319 170 L 536 170" fill="none" stroke="#252525" stroke-width="1.35"/>
+<polygon points="536,170 528.0,173.5 528.0,166.5" fill="#252525"/>
+<text x="427.5" y="160" text-anchor="middle" font-size="15" font-weight="400" style="fill:#252525">재고 확보 · HELD 저장</text>
+<path d="M 536 210 L 319 210" fill="none" stroke="#252525" stroke-width="1.35" stroke-dasharray="6 4"/>
+<path d="M 327.0 206.5 L 319 210 L 327.0 213.5" fill="none" stroke="#252525" stroke-width="1.35"/>
+<text x="427.5" y="200" text-anchor="middle" font-size="15" font-weight="400" style="fill:#252525">commit</text>
+<path d="M 311 250 L 74 250" fill="none" stroke="#252525" stroke-width="1.35" stroke-dasharray="6 4"/>
+<path d="M 82.0 246.5 L 74 250 L 82.0 253.5" fill="none" stroke="#252525" stroke-width="1.35"/>
+<text x="192.5" y="240" text-anchor="middle" font-size="15" font-weight="400" style="fill:#252525">예약 ID · 만료 시각</text>
+<path d="M 74 310 L 776 310" fill="none" stroke="#252525" stroke-width="1.35"/>
+<polygon points="776,310 768.0,313.5 768.0,306.5" fill="#252525"/>
+<text x="425.0" y="300" text-anchor="middle" font-size="15" font-weight="400" style="fill:#252525">결제 요청</text>
+<path d="M 776 365 L 319 365" fill="none" stroke="#252525" stroke-width="1.35"/>
+<polygon points="319,365 327.0,361.5 327.0,368.5" fill="#252525"/>
+<text x="547.5" y="355" text-anchor="middle" font-size="15" font-weight="400" style="fill:#252525">예약 상태 · 금액 확인</text>
+<path d="M 319 405 L 776 405" fill="none" stroke="#252525" stroke-width="1.35" stroke-dasharray="6 4"/>
+<path d="M 768.0 408.5 L 776 405 L 768.0 401.5" fill="none" stroke="#252525" stroke-width="1.35"/>
+<text x="547.5" y="395" text-anchor="middle" font-size="15" font-weight="400" style="fill:#252525">확인 결과</text>
+<path d="M 784 435 L 820 435 L 820 475 L 784 475" fill="none" stroke="#252525" stroke-width="1.35"/>
+<polygon points="784,475 792.0,471.5 792.0,478.5" fill="#252525"/>
+<text x="839" y="457" text-anchor="start" font-size="15" font-weight="400" style="fill:#252525">결제 작업 · 고정 키 저장</text>
+<path d="M 784 515 L 1036 515" fill="none" stroke="#252525" stroke-width="1.35"/>
+<polygon points="1036,515 1028.0,518.5 1028.0,511.5" fill="#252525"/>
+<text x="910.0" y="505" text-anchor="middle" font-size="15" font-weight="400" style="fill:#252525">동일 작업 키로 결제</text>
+<path d="M 1036 560 L 784 560" fill="none" stroke="#252525" stroke-width="1.35" stroke-dasharray="6 4"/>
+<path d="M 792.0 556.5 L 784 560 L 792.0 563.5" fill="none" stroke="#252525" stroke-width="1.35"/>
+<text x="910.0" y="550" text-anchor="middle" font-size="15" font-weight="400" style="fill:#252525">결제 성공</text>
+<path d="M 784 600 L 820 600 L 820 640 L 784 640" fill="none" stroke="#252525" stroke-width="1.35"/>
+<polygon points="784,640 792.0,636.5 792.0,643.5" fill="#252525"/>
+<text x="839" y="622" text-anchor="start" font-size="15" font-weight="400" style="fill:#252525">결과 + Outbox 저장</text>
+<path d="M 776 690 L 319 690" fill="none" stroke="#252525" stroke-width="1.35" stroke-dasharray="6 4"/>
+<path d="M 327.0 686.5 L 319 690 L 327.0 693.5" fill="none" stroke="#252525" stroke-width="1.35"/>
+<text x="547.5" y="680" text-anchor="middle" font-size="15" font-weight="400" style="fill:#252525">결제 성공 이벤트 (Outbox → MQ)</text>
+<path d="M 319 750 L 536 750" fill="none" stroke="#252525" stroke-width="1.35"/>
+<polygon points="536,750 528.0,753.5 528.0,746.5" fill="#252525"/>
+<text x="427.5" y="740" text-anchor="middle" font-size="15" font-weight="400" style="fill:#252525">만료 전 HELD → 확정</text>
+<path d="M 536 795 L 319 795" fill="none" stroke="#252525" stroke-width="1.35" stroke-dasharray="6 4"/>
+<path d="M 327.0 791.5 L 319 795 L 327.0 798.5" fill="none" stroke="#252525" stroke-width="1.35"/>
+<text x="427.5" y="785" text-anchor="middle" font-size="15" font-weight="400" style="fill:#252525">commit</text>
+<path d="M 74 850 L 311 850" fill="none" stroke="#252525" stroke-width="1.35"/>
+<polygon points="311,850 303.0,853.5 303.0,846.5" fill="#252525"/>
+<text x="192.5" y="840" text-anchor="middle" font-size="15" font-weight="400" style="fill:#252525">예약 상태 조회</text>
+<path d="M 311 890 L 74 890" fill="none" stroke="#252525" stroke-width="1.35" stroke-dasharray="6 4"/>
+<path d="M 82.0 886.5 L 74 890 L 82.0 893.5" fill="none" stroke="#252525" stroke-width="1.35"/>
+<text x="192.5" y="880" text-anchor="middle" font-size="15" font-weight="400" style="fill:#252525">CONFIRMED</text>
+</svg>
