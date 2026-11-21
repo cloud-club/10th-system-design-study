@@ -1,0 +1,642 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <title>결제 시스템 설계 | 시스템 디자인 스터디</title>
+  <style>
+    :root {
+      --ink:#0b192e; --ink2:#172d45; --paper:#f5f8fc; --white:#f8fbff;
+      --mint:#85e5d3; --mint-dark:#168273; --orange:#ffa27d; --yellow:#ffdb90;
+      --blue:#91c6ff; --slate:#a8b9ca; --light-slate:#5b7084;
+      --line-dark:rgba(255,255,255,.16); --line-light:rgba(16,27,43,.15);
+    }
+    * { box-sizing:border-box; }
+    html,body { margin:0; width:100%; height:100%; overflow:hidden; }
+    body { background:#07111c; color:var(--white); font-family:Pretendard,"Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",system-ui,sans-serif; -webkit-font-smoothing:antialiased; }
+    #deck { position:absolute; width:1440px; height:810px; transform-origin:top left; box-shadow:0 30px 90px rgba(0,0,0,.35); }
+    .slide { display:none; position:absolute; inset:0; width:1440px; height:810px; overflow:hidden; padding:65px 86px 68px; }
+    .slide.active { display:block; }
+    .slide.dark { background:var(--ink); color:var(--white); }
+    .slide.light { background:var(--paper); color:var(--ink); }
+    .slide.dark::before { content:""; position:absolute; inset:0; background:radial-gradient(circle at 90% 16%,rgba(90,160,239,.13),transparent 34%),radial-gradient(circle at 11% 88%,rgba(80,209,195,.08),transparent 29%); pointer-events:none; }
+    .slide.light::before { content:""; position:absolute; inset:0; background:radial-gradient(circle at 100% -8%,rgba(176,219,255,.39),transparent 32%),radial-gradient(circle at 2% 100%,rgba(213,236,252,.35),transparent 27%); pointer-events:none; }
+    .overline { position:relative; z-index:1; display:flex; align-items:center; gap:14px; font-size:16px; letter-spacing:.13em; font-weight:800; text-transform:uppercase; }
+    .overline::before { content:""; width:27px; height:3px; background:var(--mint); }
+    .dark .overline { color:var(--mint); }
+    .light .overline { color:var(--mint-dark); }
+    h1,h2,h3,p { margin:0; }
+    .heading { position:relative; z-index:1; margin-top:22px; font-weight:850; font-size:57px; line-height:1.13; letter-spacing:-.06em; }
+    .deck-subtitle { position:relative; z-index:1; margin-top:15px; font-size:24px; line-height:1.48; letter-spacing:-.025em; color:var(--slate); }
+    .light .deck-subtitle { color:#596a76; }
+    .footer { position:absolute; bottom:36px; left:86px; right:86px; z-index:3; display:flex; align-items:center; justify-content:space-between; gap:26px; height:28px; border-top:1px solid var(--line-dark); padding-top:22px; font-size:14px; font-weight:650; letter-spacing:.01em; color:#8195a7; }
+    .light .footer { border-top-color:var(--line-light); color:#647481; }
+    .footer .page { font-variant-numeric:tabular-nums; font-size:16px; letter-spacing:.12em; font-weight:800; }
+    .footer .page strong { color:var(--mint); }
+    .light .footer .page strong { color:var(--mint-dark); }
+    .mint { color:var(--mint); }
+    .light .mint { color:var(--mint-dark); }
+    .orange { color:var(--orange); }
+    .yellow { color:var(--yellow); }
+    .light .orange { color:#c95631; }
+    .mono { font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; letter-spacing:-.02em; }
+    .fine { font-size:16px; line-height:1.5; color:var(--slate); }
+    .light .fine { color:#657480; }
+
+    /* 01 — Cover */
+    .cover .hero { position:relative; margin-top:107px; z-index:1; }
+    .cover .hero h1 { font-size:100px; font-weight:850; letter-spacing:-.075em; line-height:1.1; }
+    .cover .hero p { margin-top:27px; font-size:30px; color:#a8bbcb; letter-spacing:-.025em; }
+    .cover .hero .accent { display:block; width:96px; height:7px; background:var(--mint); margin-bottom:34px; border-radius:2px; }
+    .cover .big-number { position:absolute; top:46px; right:-18px; font-size:400px; font-weight:900; line-height:.95; color:rgba(255,255,255,.038); letter-spacing:-.1em; user-select:none; }
+    .cover .cover-flow { position:absolute; bottom:155px; left:86px; display:flex; gap:17px; align-items:center; color:#a8bbc9; font-size:18px; letter-spacing:-.02em; }
+    .cover .cover-flow b { color:var(--mint); font-weight:700; font-size:21px; }
+    .cover .cover-mark { position:absolute; right:108px; bottom:144px; width:240px; height:122px; border-left:1px solid rgba(93,224,181,.38); padding:8px 0 0 24px; font-size:18px; line-height:1.8; color:#b3c1cb; }
+
+    /* 02 — Domain */
+    .money-flow { display:grid; grid-template-columns:176px minmax(0,1fr) 220px minmax(0,1fr) 176px; gap:16px; align-items:center; margin-top:65px; position:relative; min-height:130px; }
+    .money-person .small { font-size:16px; color:#63819a; margin-bottom:13px; font-weight:800; letter-spacing:.1em; }
+    .money-person .big { font-size:37px; font-weight:850; letter-spacing:-.05em; }
+    .money-person .secondary { margin-top:10px; font-size:17px; color:#60768a; }
+    .money-person.right { text-align:right; }
+    .money-stream { min-width:0; padding:0 6px; text-align:center; }
+    .flow-label { font-size:17px; color:#295f7c; font-weight:850; white-space:nowrap; }
+    .flow-label small { display:block; margin-top:6px; color:#6a8aa0; font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:14px; font-weight:700; }
+    .flow-line { position:relative; height:3px; background:#438ba2; border-radius:4px; margin:25px 4px 0; }
+    .flow-line::after { content:""; position:absolute; right:0; top:50%; width:13px; height:13px; border-top:3px solid #438ba2; border-right:3px solid #438ba2; transform:translateY(-50%) rotate(45deg); }
+    .money-platform { min-height:130px; padding:22px 17px; border:1px solid #b8e4de; border-radius:18px; text-align:center; background:linear-gradient(135deg,#dff9f3,#f0fbff); box-shadow:0 12px 24px rgba(33,112,139,.09); }
+    .money-platform .small { font-size:14px; color:#438578; font-weight:850; letter-spacing:.09em; }
+    .money-platform strong { display:block; margin-top:13px; color:#164255; font-size:30px; letter-spacing:-.06em; }
+    .money-platform span { display:block; margin-top:5px; color:#517888; font-size:17px; font-weight:700; }
+    .terms { position:absolute; left:86px; right:86px; top:472px; display:grid; grid-template-columns:1fr 1fr 1fr; gap:40px; }
+    .term { padding-top:21px; border-top:2px solid #b5d4e2; }
+    .term .name { font-size:23px; font-weight:850; margin-bottom:14px; }
+    .term p { font-size:20px; line-height:1.52; color:#465866; word-break:keep-all; }
+    .footnote-tag { position:absolute; left:86px; bottom:103px; font-size:17px; color:#485e6c; }
+
+    /* 03 — Requirements */
+    .req-grid { display:grid; grid-template-columns:1fr 1fr; column-gap:54px; margin-top:32px; }
+    .req-title { font-size:21px; color:var(--mint); font-weight:800; margin-bottom:13px; }
+    .req-item { display:flex; align-items:flex-start; gap:17px; border-top:1px solid rgba(255,255,255,.12); padding:11px 0 13px; }
+    .req-item .num { min-width:43px; color:#7e91a0; font-size:17px; font-weight:750; }
+    .req-item b { display:block; font-size:23px; line-height:1.2; margin-bottom:5px; }
+    .req-item p { font-size:17px; color:#a4b3bf; line-height:1.38; word-break:keep-all; }
+    .req-item .req-example { margin-top:7px; color:#d6e7f2; font-size:15.5px; line-height:1.38; white-space:nowrap; }
+    .req-example span { display:inline-block; margin-right:7px; padding:2px 7px; border-radius:6px; background:rgba(133,229,211,.16); color:var(--mint); font-size:13px; font-weight:850; }
+    .assumptions { display:flex; align-items:center; gap:18px; margin-top:13px; padding-top:12px; border-top:1px solid rgba(255,255,255,.13); }
+    .assumptions .tag { color:var(--yellow); font-size:17px; font-weight:900; }
+    .assumptions .values { display:flex; gap:12px; flex-wrap:wrap; }
+    .assumptions .values span { display:inline-block; font-size:15.5px; color:#dbe6eb; background:rgba(255,255,255,.065); padding:7px 12px; border-radius:7px; }
+    .scale-strip { position:relative; margin-top:15px; display:flex; gap:21px; align-items:baseline; }
+    .scale-strip b { font-size:28px; color:var(--mint); }
+    .scale-strip p { font-size:17px; color:#a1b2be; }
+
+    /* 04 — Additional operating requirements */
+    .extra-grid { display:grid; grid-template-columns:1fr 1fr; gap:20px 24px; margin-top:31px; }
+    .extra-card { min-height:200px; display:flex; flex-direction:column; padding:21px 25px 19px; border:1px solid #d4e3ef; border-radius:19px; background:#fff; box-shadow:0 10px 24px rgba(33,80,125,.075); }
+    .extra-head { display:flex; align-items:center; gap:13px; }
+    .extra-num { display:grid; place-items:center; flex:0 0 43px; height:37px; border-radius:10px; background:#e5f1fc; color:#2577ae; font-size:17px; font-weight:900; }
+    .extra-card:nth-child(2) .extra-num { background:#fff0e6; color:#bb6646; }
+    .extra-card:nth-child(3) .extra-num { background:#e2f7ee; color:#23856a; }
+    .extra-card:nth-child(4) .extra-num { background:#eeeaff; color:#7160b5; }
+    .extra-head h3 { color:#16334b; font-size:26px; font-weight:850; letter-spacing:-.04em; }
+    .extra-card .extra-desc { margin-top:12px; color:#4c6477; font-size:17px; line-height:1.38; word-break:keep-all; }
+    .extra-card .extra-example { margin-top:10px; color:#1c6e73; font-size:15.5px; font-weight:750; line-height:1.35; white-space:nowrap; }
+    .extra-card .extra-tech { margin-top:auto; padding-top:11px; border-top:1px solid #e3edf2; color:#71879a; font-size:15px; font-weight:750; }
+
+    /* 04 — Architecture */
+    .arch-canvas { position:relative; width:1268px; height:456px; margin-top:24px; border:1px solid #d7e2ef; border-radius:22px; background:linear-gradient(130deg,rgba(255,255,255,.92),rgba(235,244,254,.83)); box-shadow:0 16px 32px rgba(35,75,118,.08); overflow:hidden; }
+    .arch-canvas svg { position:absolute; inset:0; z-index:1; width:100%; height:100%; }
+    .cloud-boundary { position:absolute; z-index:0; left:166px; top:29px; width:908px; height:410px; border:2px dashed #add1df; border-radius:18px; background:rgba(218,239,253,.18); }
+    .cloud-boundary .legend { position:absolute; top:-13px; left:19px; background:#ecf7ff; border:1px solid #d0e6f8; border-radius:99px; padding:4px 14px; color:#337ba1; font-size:14px; font-weight:900; letter-spacing:.06em; }
+    .arch-box { position:absolute; z-index:2; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:8px 10px; border-radius:14px; background:#fff; border:1.5px solid #8fb6c9; color:#132f47; box-shadow:0 8px 16px rgba(22,63,94,.10); text-align:center; }
+    .arch-box strong { font-size:18.5px; font-weight:850; letter-spacing:-.038em; }
+    .arch-box small { font-size:12.7px; margin-top:6px; color:#668399; line-height:1.25; font-weight:720; }
+    .arch-box.accent { border-color:#3eb9a5; background:#e9fcf7; }
+    .arch-box.gateway { border-color:#81aeea; background:#e9f3ff; }
+    .arch-box.gateway strong { font-size:16px; white-space:nowrap; }
+    .arch-box.compact strong { font-size:17.2px; }
+    .arch-box.compact small { font-size:11.7px; }
+    .arch-box.external { border-color:#e0a075; background:#fff4ec; }
+    .arch-box.database { border-color:#80b0e2; background:#edf6ff; }
+    .arch-box.queue { border-color:#a4b2dc; background:#f3f5ff; }
+    .arch-box.events { border-color:#8c9bd4; background:#edf0ff; }
+    .arch-box.ops { border-color:#86b7ce; background:#eef9fc; }
+    .arch-annot { position:absolute; z-index:3; color:#47718b; font-size:13px; font-weight:850; padding:4px 8px; background:#f0f7ff; border-radius:6px; }
+    .arch-caption { position:relative; margin-top:11px; display:flex; justify-content:space-between; gap:20px; font-size:16px; color:#51677b; }
+    .arch-caption b { color:#147c76; }
+
+    /* 05 — Pay-in */
+    .payin-steps { display:grid; grid-template-columns:repeat(3,1fr); gap:20px 25px; margin-top:44px; }
+    .payin-step { min-height:163px; border-top:2px solid #405369; padding-top:18px; position:relative; }
+    .payin-step:nth-child(4), .payin-step:nth-child(5), .payin-step:nth-child(6) { border-top-color:rgba(93,224,181,.75); }
+    .payin-step .count { display:block; color:var(--mint); font-size:18px; font-weight:850; letter-spacing:.04em; margin-bottom:13px; }
+    .payin-step .step-title { font-size:27px; font-weight:850; margin-bottom:11px; letter-spacing:-.045em; }
+    .payin-step p { font-size:19px; line-height:1.45; color:#a4b4c2; max-width:330px; word-break:keep-all; }
+    .payin-step .step-hint { position:absolute; top:12px; right:10px; font-size:15px; color:#7d8f9c; }
+    .payin-alert { position:absolute; left:86px; right:86px; bottom:103px; padding:16px 22px; border-left:5px solid var(--orange); background:rgba(255,147,107,.09); color:#e9cdc1; font-size:20px; line-height:1.42; }
+    .payin-alert strong { color:var(--orange); }
+
+    /* 06 — Model */
+    .model-layout { display:grid; grid-template-columns:minmax(0,.92fr) minmax(0,1.08fr); align-items:start; gap:38px; margin-top:33px; }
+    .model-column { display:flex; flex-direction:column; min-width:0; gap:19px; }
+    .schema { border:1.5px solid #afccdf; border-radius:18px; overflow:hidden; background:#fff; box-shadow:0 12px 24px rgba(37,79,125,.08); }
+    .schema .schema-title { display:flex; justify-content:space-between; align-items:center; gap:14px; background:#193b55; color:#fff; padding:16px 23px; font-size:22px; font-weight:850; }
+    .schema .schema-title small { font-size:15px; color:#a0e3d6; }
+    .schema .fields { padding:10px 23px 13px; }
+    .schema .field { display:flex; align-items:center; justify-content:space-between; min-height:39px; gap:15px; border-bottom:1px solid #e5edf4; font-size:18px; }
+    .schema .field:last-child { border:0; }
+    .schema .field b { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:17px; font-weight:750; color:#193346; }
+    .schema .field em { font-size:15px; font-style:normal; font-weight:800; color:#418a75; }
+    .schema .field span { font-size:15px; color:#7c8d99; }
+    .model-status { padding:19px 23px 18px; background:#e9f3fc; border:1px solid #d3e4f2; border-radius:18px; }
+    .model-status .state-label { margin-bottom:15px; font-size:18px; font-weight:850; color:#285b77; }
+    .states { display:flex; align-items:center; flex-wrap:wrap; gap:11px; }
+    .states.outcomes { margin-top:13px; }
+    .state { display:grid; place-items:center; min-width:157px; height:42px; padding:4px 12px; border-radius:9px; background:#fff; border:1px solid #c8dbe8; color:#254257; font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:16px; font-weight:800; }
+    .state.success { background:#dcf9e9; border-color:#9ddfc6; color:#13654b; }
+    .state.fail { background:#fff0ea; border-color:#f0bea9; color:#8f3b26; }
+    .state-arrow { color:#4f88a2; font-size:25px; font-weight:900; }
+    .model-status .state-desc { margin-top:13px; color:#668198; font-size:15px; line-height:1.35; }
+    .model-note { padding:18px 23px; background:#e5f7f3; border:1px solid #b2e3d8; border-radius:15px; font-size:17px; line-height:1.45; color:#326a67; }
+
+    /* 07 — Exactly once */
+    .equation { display:flex; align-items:stretch; gap:22px; margin-top:62px; }
+    .eq-part { flex:1; min-height:139px; border-top:3px solid #416476; padding-top:18px; }
+    .eq-part .title { font-size:30px; font-weight:850; letter-spacing:-.035em; }
+    .eq-part p { margin-top:13px; font-size:18px; color:#a8b7c2; }
+    .eq-symbol { flex:0 0 35px; align-self:center; text-align:center; font-size:45px; color:var(--mint); font-weight:700; }
+    .eq-outcome { border-top-color:var(--mint); }
+    .eq-outcome .title { color:var(--mint); }
+    .cases { display:grid; grid-template-columns:1fr 1fr; gap:50px; margin-top:51px; }
+    .case { border-left:4px solid var(--orange); padding:0 0 0 23px; }
+    .case:nth-child(2) { border-left-color:var(--blue); }
+    .case .case-name { font-size:25px; font-weight:800; margin-bottom:12px; }
+    .case p { color:#a8bac5; font-size:20px; line-height:1.52; word-break:keep-all; }
+    .idempotent-key { position:absolute; bottom:110px; left:86px; right:86px; display:flex; align-items:center; justify-content:space-between; padding:17px 22px; background:#20374a; border-radius:9px; color:#b5c6d1; font-size:17px; }
+    .idempotent-key code { color:var(--mint); font-size:20px; font-weight:850; }
+
+    /* 08 — Failures */
+    .failure-rows { margin-top:48px; display:grid; grid-template-columns:repeat(3,1fr); gap:27px; }
+    .failure-row { border-top:4px solid #acbcc4; padding-top:22px; }
+    .failure-row.warn { border-top-color:#de784f; }
+    .failure-row.info { border-top-color:#0fa881; }
+    .failure-row .event { font-size:18px; font-weight:750; color:#60737c; }
+    .failure-row h3 { margin-top:14px; font-size:28px; letter-spacing:-.04em; }
+    .failure-row p { margin-top:14px; color:#4d606c; font-size:20px; line-height:1.48; word-break:keep-all; }
+    .queue-board { position:absolute; bottom:115px; left:86px; right:86px; display:flex; align-items:center; justify-content:center; gap:19px; padding:25px 16px; background:#e4ebe9; border-radius:10px; }
+    .queue-node { padding:15px 23px; border-radius:7px; background:#fff; border:2px solid #577481; color:#173a4d; font-size:19px; font-weight:800; text-align:center; }
+    .queue-node.dead { background:#ffe5db; border-color:#cf755b; }
+    .queue-arrow { color:#507785; font-size:29px; font-weight:900; }
+    .queue-node small { display:block; margin-top:5px; font-size:13px; color:#64808a; font-weight:650; }
+    .queue-note { position:absolute; bottom:83px; left:86px; font-size:15px; color:#6b7982; }
+
+    /* 09 — Integrity */
+    .integrity-grid { display:grid; grid-template-columns: .9fr 1.1fr; gap:67px; margin-top:51px; }
+    .integ-heading { font-size:25px; font-weight:850; margin-bottom:18px; }
+    .ledger-journal { border-top:3px solid #518070; border-bottom:3px solid #518070; padding:12px 0; }
+    .ledger-journal .entry { display:flex; justify-content:space-between; font-size:23px; padding:14px 12px; border-bottom:1px solid rgba(255,255,255,.17); }
+    .ledger-journal .entry:last-child { border:0; }
+    .ledger-journal .entry span { color:#bbcad5; }
+    .ledger-journal .entry b { font-variant-numeric:tabular-nums; }
+    .ledger-journal .entry:nth-child(2) b { color:var(--mint); }
+    .net-zero { margin-top:20px; display:flex; align-items:center; justify-content:space-between; color:#a3b5c2; font-size:18px; }
+    .net-zero strong { font-size:34px; color:var(--mint); }
+    .recon-loop { position:relative; margin-top:5px; display:grid; grid-template-columns:1fr 36px 1fr; align-items:center; gap:15px; }
+    .recon-system { padding:17px 20px; border-radius:8px; border:1px solid #547082; background:#20364b; font-size:20px; font-weight:800; text-align:center; }
+    .recon-system small { display:block; margin-top:9px; font-size:15px; font-weight:550; color:#9fb1bf; }
+    .recon-loop .versus { font-weight:900; font-size:27px; color:var(--mint); text-align:center; }
+    .recon-result { margin-top:28px; border-left:4px solid var(--orange); padding:6px 0 6px 20px; font-size:19px; line-height:1.58; color:#b8c5cf; }
+    .aws-ops-note { margin-top:20px; padding:15px 19px; border:1px solid rgba(129,195,234,.28); border-radius:14px; background:rgba(140,198,244,.09); color:#c7dceb; font-size:17px; line-height:1.55; word-break:keep-all; }
+    .aws-ops-note strong { display:block; margin-bottom:5px; color:var(--mint); font-size:16px; }
+    .integ-bottom { position:absolute; bottom:103px; left:86px; right:86px; display:flex; align-items:center; gap:15px; font-size:19px; color:#b9cbd6; }
+    .integ-bottom .pill { color:#1b312c; background:var(--mint); padding:11px 17px; border-radius:6px; font-weight:850; }
+
+    /* 10 — Close */
+    .end-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:40px; margin-top:73px; }
+    .end-item { border-top:4px solid #257c6e; padding-top:23px; }
+    .end-item:nth-child(2) { border-top-color:#568db7; }
+    .end-item:nth-child(3) { border-top-color:#d18863; }
+    .end-item .id { font-size:18px; color:#647681; font-weight:850; margin-bottom:25px; }
+    .end-item h3 { font-size:32px; letter-spacing:-.045em; margin-bottom:17px; }
+    .end-item p { color:#526a77; font-size:21px; line-height:1.55; word-break:keep-all; }
+    .end-questions { position:absolute; left:86px; right:86px; bottom:117px; border-top:1px solid #bcc8cb; padding-top:25px; display:flex; gap:48px; align-items:flex-start; }
+    .end-questions .label { flex:0 0 130px; font-size:18px; color:#0e846a; font-weight:900; padding-top:6px; }
+    .end-questions ul { margin:0; padding-left:22px; display:flex; flex-direction:column; gap:8px; font-size:20px; line-height:1.35; color:#263c4d; }
+
+    /* Presenter controls and notes */
+    .controls { position:fixed; right:22px; top:14px; z-index:20; display:flex; gap:8px; opacity:.55; transition:opacity .18s; }
+    .controls:hover,.controls:focus-within { opacity:1; }
+    .controls button { cursor:pointer; width:39px; height:39px; border-radius:9px; border:1px solid rgba(255,255,255,.23); color:#d1e1ed; background:rgba(24,37,51,.92); backdrop-filter:blur(9px); font-size:19px; font-family:inherit; }
+    .controls button:focus-visible { outline:3px solid var(--mint); outline-offset:2px; }
+    .controls button:hover { background:#304b60; }
+    .help { position:fixed; left:25px; top:25px; z-index:20; color:#7e93a5; font-size:13px; letter-spacing:.01em; opacity:.7; }
+    #notesPanel { display:none; position:fixed; z-index:23; right:25px; bottom:75px; width:min(480px,calc(100vw - 50px)); max-height:min(45vh,400px); padding:26px 29px; border-radius:14px; background:#f9faf8; color:#1e3445; box-shadow:0 22px 70px rgba(0,0,0,.45); overflow:auto; }
+    #notesPanel.open { display:block; }
+    #notesPanel h3 { font-size:21px; margin-bottom:12px; }
+    #notesPanel p { font-size:16px; line-height:1.55; margin-top:10px; color:#405563; }
+    #overview { display:none; position:fixed; z-index:25; inset:0; padding:30px; background:rgba(7,17,28,.95); overflow:auto; }
+    #overview.open { display:block; }
+    #overview h2 { margin:5px 0 25px; font-size:30px; }
+    #overview .thumbs { display:grid; grid-template-columns:repeat(5,minmax(160px,1fr)); gap:16px; }
+    #overview .thumb { cursor:pointer; background:#172b3e; color:#e6f2f8; border:1px solid #375066; border-radius:12px; min-height:128px; padding:20px; text-align:left; font:inherit; }
+    #overview .thumb span { display:block; color:var(--mint); font-size:18px; font-weight:900; margin-bottom:17px; }
+    #overview .thumb strong { font-size:19px; line-height:1.3; }
+    #overview .thumb:hover { border-color:var(--mint); background:#234052; }
+    #overview .close-overview { margin-top:24px; padding:12px 18px; border:0; background:var(--mint); color:#14382e; font:inherit; font-weight:800; cursor:pointer; border-radius:7px; }
+    .speaker-notes { display:none; }
+    @media (max-width:650px) { .controls { top:8px; right:10px; } .help { display:none; } #overview .thumbs { grid-template-columns:repeat(2,minmax(130px,1fr)); } }
+    @media print {
+      @page { size:16in 9in; margin:0; }
+      html,body { width:auto; height:auto; overflow:visible; background:#fff; }
+      #deck { position:static; transform:none !important; left:0 !important; top:0 !important; width:16in; height:auto; box-shadow:none; }
+      .slide,.slide.active { display:block !important; position:relative; width:16in; height:9in; padding:65px 86px 68px; break-after:page; page-break-after:always; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+      .controls,.help,#notesPanel,#overview { display:none !important; }
+    }
+  </style>
+</head>
+<body>
+<main id="deck" aria-label="결제 시스템 설계 발표 자료">
+
+  <!-- 01 -->
+  <section class="slide dark cover active" data-title="결제 시스템 설계">
+    <div class="big-number" aria-hidden="true">11</div>
+    <div class="overline">대규모 시스템 설계 스터디 · 11장</div>
+    <div class="hero">
+      <span class="accent"></span>
+      <h1>결제 시스템<br><span class="mint">설계</span></h1>
+      <p>대금 수신 · 대금 정산 · 정확히 한 번 전달</p>
+    </div>
+    <div class="cover-flow"><span>결제 서비스</span><b>→</b><span>결제 실행자</span><b>→</b><span>결제 서비스 공급자(PSP)</span></div>
+    <div class="cover-mark">발표 · 고태현<br>2026. 11. 18.<br>대규모 시스템 설계 기초 2</div>
+    <footer class="footer"><span>출처 · 『가상 면접 사례로 배우는 대규모 시스템 설계 기초 2』, 11장</span><span class="page"><strong>01</strong> / 11</span></footer>
+    <aside class="speaker-notes"><p>이번 발표는 책 11장(371~398쪽)의 결제 시스템을 대상으로 합니다. 책의 구성에 따라 대금 수신 흐름과 대금 정산 흐름, 그리고 PSP 연동·조정·정확히 한 번 전달을 중심으로 설명합니다.</p></aside>
+  </section>
+
+  <!-- 02 -->
+  <section class="slide light" data-title="대금 수신과 대금 정산">
+    <div class="overline">1단계 · 문제 이해 및 설계 범위 확정</div>
+    <h2 class="heading">대금 수신과 대금 정산</h2>
+    <p class="deck-subtitle">결제 흐름은 자금의 이동에 따라 대금 수신(pay-in)과 대금 정산(pay-out)으로 나뉜다.</p>
+    <div class="money-flow">
+      <div class="money-person"><div class="small">BUYER</div><div class="big">구매자</div><div class="secondary">신용 카드</div></div>
+      <div class="money-stream"><div class="flow-label">대금 수신<small>pay-in</small></div><div class="flow-line"></div></div>
+      <div class="money-platform"><div class="small">ECOMMERCE</div><strong>전자상거래</strong><span>웹사이트</span></div>
+      <div class="money-stream"><div class="flow-label">대금 정산<small>pay-out</small></div><div class="flow-line"></div></div>
+      <div class="money-person right"><div class="small">MERCHANT</div><div class="big">판매자</div><div class="secondary">은행 계좌</div></div>
+    </div>
+    <div class="terms">
+      <div class="term"><div class="name">결제 서비스 공급자 <span class="fine">PSP</span></div><p>카드 유형과 연동하여 결제 주문을 처리하는 외부 서비스</p></div>
+      <div class="term"><div class="name">원장 <span class="fine">Ledger</span></div><p>결제 트랜잭션에 대한 금융 기록을 남기는 시스템</p></div>
+      <div class="term"><div class="name">지갑 <span class="fine">Wallet</span></div><p>판매자(merchant)의 계정 잔액을 기록하는 서비스</p></div>
+    </div>
+    <div class="footnote-tag">원장은 금융 기록을, 지갑은 판매자 계정 잔액을 관리한다.</div>
+    <footer class="footer"><span>도서 · 374~376쪽, 380~382쪽</span><span class="page"><strong>02</strong> / 11</span></footer>
+    <aside class="speaker-notes"><p>책의 그림 11.1에서는 구매자의 신용 카드에서 전자상거래 웹사이트의 은행 계좌로 자금이 이동하는 과정을 대금 수신, 전자상거래 웹사이트의 계좌에서 판매자 계좌로 자금이 이동하는 과정을 대금 정산이라고 정의합니다.</p><p>지갑(wallet)은 이 설계에서 판매자 계정 잔액을 기록하는 서비스입니다. 소비자가 사용하는 디지털 지갑과 혼동하지 않도록 설명합니다.</p></aside>
+  </section>
+
+  <!-- 03 -->
+  <section class="slide dark" data-title="요구사항과 설계 범위">
+    <div class="overline">1단계 · 도서 기반 기능 및 비기능 요구사항</div>
+    <h2 class="heading">요구사항과 설계 범위</h2>
+    <div class="req-grid">
+      <div>
+        <div class="req-title">기능 요구사항</div>
+        <div class="req-item"><span class="num">F1</span><div><b>대금 수신 (pay-in) 흐름</b><p>판매자를 대신하여 고객으로부터 대금을 수령</p><p class="req-example"><span>예시</span>고객이 3만 원을 카드로 결제하면 대금을 수신</p></div></div>
+        <div class="req-item"><span class="num">F2</span><div><b>대금 정산 (pay-out) 흐름</b><p>판매자에게 제품 판매 대금을 송금</p><p class="req-example"><span>예시</span>판매 대금 3만 원을 판매자 은행 계좌로 송금</p></div></div>
+      </div>
+      <div>
+        <div class="req-title">비기능 요구사항</div>
+        <div class="req-item"><span class="num">N1</span><div><b>신뢰성 및 내결함성</b><p>결제 실패가 발생하더라도 안전하게 처리</p><p class="req-example"><span>예시</span>PG 응답이 끊겨도 중복 결제 없이 재시도</p></div></div>
+        <div class="req-item"><span class="num">N2</span><div><b>조정 (reconciliation)</b><p>내부 기록과 PSP 정산 파일의 일치 여부 확인</p><p class="req-example"><span>예시</span>PSP 정산 100건과 내부 원장 99건을 대조</p></div></div>
+        <div class="req-item"><span class="num">N3</span><div><b>결제 보안</b><p>신용 카드 정보는 PSP의 외부 결제 페이지에서 입력</p><p class="req-example"><span>예시</span>카드번호는 PG 페이지에 입력하고 토큰만 보관</p></div></div>
+      </div>
+    </div>
+    <div class="assumptions"><span class="tag">설계 범위</span><div class="values"><span>신용 카드 결제</span><span>PG 이용</span><span>하나의 통화</span><span>판매자 대금 정산</span></div></div>
+    <div class="scale-strip"><b>하루 100만 건</b><p>일평균 약 11.6 TPS · 책에서는 개략적으로 약 10 TPS · 트랜잭션의 정확한 처리가 핵심</p></div>
+    <footer class="footer"><span>도서 · 372~373쪽, 381쪽 · 결제 보안은 상세 설계에서 추가로 다루는 주제</span><span class="page"><strong>03</strong> / 11</span></footer>
+    <aside class="speaker-notes"><p>책이 인터뷰어와 명확히 한 범위: Amazon 유형의 전자상거래 결제 백엔드, 카드만, PSP에 카드 처리를 위임, 전 세계 결제이지만 하나의 통화, 하루 100만 건, 판매자 정산 지원입니다.</p><p>각 요구사항 아래의 3만 원 결제 및 정산, PSP 100건과 내부 원장 99건 비교 등은 이해를 돕기 위해 덧붙인 설명용 예시로, 책에서 정한 실제 거래 금액이나 건수가 아닙니다.</p><p>100만/86,400은 약 11.6TPS입니다. 책의 약 10TPS는 개략적인 근사치입니다. 피크 트래픽·환불·다중 통화는 확장 과제로 취급합니다.</p></aside>
+  </section>
+
+  <!-- 04 -->
+  <section class="slide light" data-title="도서 외 추가 비기능 요구사항">
+    <div class="overline">1단계 · 도서 외 추가 요구사항</div>
+    <h2 class="heading">운영을 위한 추가 요구사항</h2>
+    <p class="deck-subtitle">책의 결제 요구사항에 더해, Spring Cloud MSA와 외부 PG를 운영하기 위해 정의한다.</p>
+    <div class="extra-grid">
+      <article class="extra-card">
+        <div class="extra-head"><span class="extra-num">N4</span><h3>유량 제어</h3></div>
+        <p class="extra-desc">과도한 결제 요청으로부터 내부 시스템과 PG를 보호해야 한다.</p>
+        <p class="extra-example">예시 · 결제 요청을 초당 제한하고 초과 시 429 응답</p>
+        <div class="extra-tech">설계 대응 · Spring Cloud Gateway RateLimiter · Redis</div>
+      </article>
+      <article class="extra-card">
+        <div class="extra-head"><span class="extra-num">N5</span><h3>장애 격리</h3></div>
+        <p class="extra-desc">외부 PG 장애가 전체 결제 시스템으로 전파되지 않아야 한다.</p>
+        <p class="extra-example">예시 · PG 응답 지연 시 호출을 차단하고 재시도</p>
+        <div class="extra-tech">설계 대응 · Circuit Breaker(Resilience4j) · Kafka</div>
+      </article>
+      <article class="extra-card">
+        <div class="extra-head"><span class="extra-num">N6</span><h3>결제 이력 추적</h3></div>
+        <p class="extra-desc">결제·환불의 상태 변경과 실패 원인을 기록해야 한다.</p>
+        <p class="extra-example">예시 · 결제·환불 상태, 실패 코드와 추적 ID 기록</p>
+        <div class="extra-tech">설계 대응 · 상태 이력 테이블 · event_id / trace_id</div>
+      </article>
+      <article class="extra-card">
+        <div class="extra-head"><span class="extra-num">N7</span><h3>모니터링 및 경보</h3></div>
+        <p class="extra-desc">결제 성공률, 응답 지연, 오류를 관찰하고 비정상 상황을 감지해야 한다.</p>
+        <p class="extra-example">예시 · 결제 성공률 하락 또는 p95 지연 증가 시 알림</p>
+        <div class="extra-tech">설계 대응 · CloudWatch Metrics · Logs · Alarms</div>
+      </article>
+    </div>
+    <footer class="footer"><span>추가 정의 · N4~N7은 도서 외 운영 안정성 요구사항</span><span class="page"><strong>04</strong> / 11</span></footer>
+    <aside class="speaker-notes"><p>이 페이지의 유량 제어, 장애 격리, 결제 이력 추적, 모니터링 및 경보는 발표에서 추가한 운영 요구사항이며 책의 요구사항으로 인용하지 않습니다.</p><p>N4는 Gateway RateLimiter와 Redis를 사용해 과도한 요청이 내부 서비스와 외부 PG에 전달되지 않게 하는 예시입니다. 정책에 따라 사용자 또는 판매자 단위의 제한을 고려할 수 있습니다.</p><p>N5는 결제 실행자가 PG를 호출할 때 연결 시간 제한과 Circuit Breaker(Resilience4j)를 적용합니다. PG 장애 중에도 결제 조회나 내부 원장 서비스가 함께 고갈되지 않도록 호출을 격리합니다. 재시도 가능한 오류만 Kafka 재시도 토픽으로 보냅니다.</p><p>N6는 payment_order_id와 event_id, trace_id를 사용해 상태 변경과 실패 원인을 남기는 감사 추적 요구사항입니다. 환불은 책에서 이번 기본 범위로 확정한 기능이 아니므로 추가 설계 범위로 소개합니다.</p><p>N7은 결제 성공률, 외부 PG 지연, HTTP 오류, 재시도 토픽 적체량 등을 지표로 관리하고 CloudWatch로 알람을 구성하는 예시입니다. 예시의 429 응답과 p95 지연은 동작 설명용이며 특정 운영 임계값을 정한 것은 아닙니다.</p></aside>
+  </section>
+
+  <!-- 05 -->
+  <section class="slide light" data-title="Spring Cloud 기반 MSA 설계안">
+    <div class="overline">2단계 · 개략적 설계안 제시 및 동의 구하기</div>
+    <h2 class="heading">Spring Cloud 기반 MSA 설계안</h2>
+    <p class="deck-subtitle">결제·지갑·원장을 서비스로 분리하고, Amazon MSK(Kafka)로 결제 이벤트를 전달한다.</p>
+    <div class="arch-canvas" role="img" aria-label="구매자 요청은 CloudFront 및 WAF, ALB와 Spring Cloud Gateway를 거쳐 결제 서비스 및 결제 실행자로 전달된다. 외부 PG 웹훅도 ALB와 Gateway를 거쳐 Executor로 라우팅된다. Payment DB와 Execution DB는 서로 분리된 Aurora 데이터베이스다. 결제 실행자는 Execution DB에 Outbox 이벤트를 남기고 Outbox Publisher가 Amazon MSK Kafka에 발행한다. 지갑 서비스와 원장 서비스는 각각 별도의 Aurora DB를 소유한다. 조정 서비스는 S3 정산 파일과 다른 서비스의 조회 API를 사용하고 Recon DB를 소유한다.">
+      <div class="cloud-boundary"><span class="legend">AWS CLOUD · ECS Fargate 기반 MSA 예시</span></div>
+      <svg viewBox="0 0 1268 456" aria-hidden="true">
+        <defs>
+          <marker id="cloudArr" viewBox="0 0 10 10" markerWidth="8" markerHeight="8" refX="8" refY="5" orient="auto-start-reverse"><path d="M1 1 L9 5 L1 9" fill="none" stroke="#4185a3" stroke-width="1.7"/></marker>
+          <marker id="cloudArrWarm" viewBox="0 0 10 10" markerWidth="8" markerHeight="8" refX="8" refY="5" orient="auto"><path d="M1 1 L9 5 L1 9" fill="none" stroke="#d28960" stroke-width="1.7"/></marker>
+        </defs>
+        <g stroke="#4185a3" stroke-width="2.6" fill="none" marker-end="url(#cloudArr)">
+          <path d="M146 146 H173"/>
+          <path d="M346 146 H370"/>
+          <path d="M463 146 H494"/>
+          <path d="M691 146 H717"/>
+          <path d="M880 146 H907"/>
+          <path d="M777 188 V204 H273 V242"/>
+          <path d="M958 188 V221 H423 V242"/>
+          <path d="M491 282 H506"/>
+          <path d="M619 282 H635"/>
+          <path d="M774 282 H788"/>
+          <path d="M704 323 V337 H990 V325"/>
+          <path d="M720 399 H766"/>
+        </g>
+        <path d="M1052 146 H1098" stroke="#d28960" stroke-width="3" fill="none" marker-end="url(#cloudArrWarm)"/>
+        <path d="M1140 104 V60 H419 V102" stroke="#75a5c7" stroke-width="2" fill="none" stroke-dasharray="8 6" marker-end="url(#cloudArr)"/>
+        <path d="M593 104 V84 H980 V102" stroke="#278f9e" stroke-width="2" fill="none" stroke-dasharray="7 6" marker-end="url(#cloudArr)"/>
+        <g stroke="#68a7a1" stroke-width="2" fill="none" stroke-dasharray="6 5" marker-end="url(#cloudArr)">
+          <path d="M912 365 V350 H849 V325"/>
+          <path d="M912 350 H990 V325"/>
+        </g>
+      </svg>
+      <div class="arch-box" style="left:18px;top:104px;width:128px;height:84px"><strong>구매자</strong><small>브라우저</small></div>
+      <div class="arch-box" style="left:175px;top:104px;width:171px;height:84px"><strong>CloudFront</strong><small>AWS WAF</small></div>
+      <div class="arch-box" style="left:372px;top:104px;width:91px;height:84px"><strong>ALB</strong><small>API · 웹훅</small></div>
+      <div class="arch-box gateway" style="left:496px;top:104px;width:195px;height:84px"><strong>Spring Cloud Gateway</strong><small>라우팅 · 인증</small></div>
+      <div class="arch-box accent" style="left:719px;top:104px;width:161px;height:84px"><strong>결제 서비스</strong><small>ECS Fargate</small></div>
+      <div class="arch-box accent" style="left:909px;top:104px;width:143px;height:84px"><strong>결제 실행자</strong><small>ECS Fargate</small></div>
+      <div class="arch-box external" style="left:1100px;top:104px;width:155px;height:84px"><strong>PG / PSP</strong><small>외부 결제 페이지</small></div>
+      <div class="arch-box database compact" style="left:210px;top:244px;width:126px;height:79px"><strong>Payment DB</strong><small>Amazon Aurora</small></div>
+      <div class="arch-box database compact" style="left:355px;top:244px;width:136px;height:79px"><strong>Execution DB</strong><small>Aurora · Outbox</small></div>
+      <div class="arch-box events compact" style="left:508px;top:244px;width:111px;height:79px" aria-label="Outbox Publisher"><strong>Outbox</strong><small>Publisher</small></div>
+      <div class="arch-box events compact" style="left:637px;top:244px;width:137px;height:79px"><strong>Amazon MSK</strong><small>Kafka</small></div>
+      <div class="arch-box accent compact" style="left:790px;top:244px;width:118px;height:79px"><strong>지갑 서비스</strong><small>Aurora Wallet DB</small></div>
+      <div class="arch-box accent compact" style="left:928px;top:244px;width:125px;height:79px"><strong>원장 서비스</strong><small>Aurora Ledger DB</small></div>
+      <div class="arch-box ops" style="left:220px;top:365px;width:230px;height:68px"><strong>Eureka · Config</strong><small>Spring Cloud 공통 인프라</small></div>
+      <div class="arch-box database" style="left:496px;top:365px;width:224px;height:68px"><strong>Amazon S3</strong><small>PG 정산 파일</small></div>
+      <div class="arch-box ops" style="left:768px;top:365px;width:285px;height:68px"><strong>조정 서비스</strong><small>Spring Batch · Aurora Recon DB</small></div>
+      <span class="arch-annot" style="left:766px;top:37px">PG → ALB 웹훅</span>
+      <span class="arch-annot" style="left:741px;top:72px">Webhook → Executor</span>
+      <span class="arch-annot" style="left:894px;top:329px">조회 API</span>
+    </div>
+    <div class="arch-caption"><span><b>동기 처리</b> · Gateway → 결제 서비스 → 실행자 → PG</span><span><b>비동기 처리</b> · Execution DB → Outbox → Kafka → 지갑·원장</span></div>
+    <footer class="footer"><span>도서 · 375~376쪽, 387쪽 · Spring Cloud / Kafka / AWS는 발표용 설계안</span><span class="page"><strong>05</strong> / 11</span></footer>
+    <aside class="speaker-notes"><p>책의 결제 서비스(payment service)는 결제 이벤트를 수락하고 흐름을 조율하며, 결제 실행자(payment executor)는 개별 결제 주문을 PG/PSP에 요청합니다. Spring Cloud, Kafka, AWS 제품 선택은 책의 필수 기술이 아니라 발표자가 추가한 MSA 구현 예시입니다.</p><p>외부 사용자 요청은 CloudFront와 WAF, ALB를 거쳐 Spring Cloud Gateway로 들어옵니다. PG/PSP의 웹훅은 공개 ALB에서 받아 Gateway가 Payment Executor의 웹훅 처리 경로로 라우팅합니다. Executor를 외부에 직접 노출하지 않으며, 웹훅 서명과 재전송 멱등성을 검증합니다. Gateway는 Eureka 서비스 디스커버리를 이용하고 Spring Cloud Config Server가 공통 설정을 공급합니다. 애플리케이션과 공통 서비스는 ECS Fargate에서 실행한다고 가정합니다.</p><p>Payment Service는 자신이 소유한 Aurora Payment DB에 결제 이벤트·주문을 저장합니다. 결제 실행자는 별도의 Aurora Execution DB에 PG 실행 상태와 Outbox 이벤트를 같은 트랜잭션으로 저장합니다. Outbox Publisher는 커밋된 Outbox 레코드를 읽어 Amazon MSK Kafka에 발행합니다. 지갑 서비스와 원장 서비스는 별도 소비자 그룹으로 이벤트를 받고 각자 소유한 Aurora Wallet DB와 Ledger DB를 갱신합니다. 메시지 중복 소비와 서비스 간 일시적 불일치에 대응하기 위해 멱등성 및 조정이 필요합니다.</p><p>일시적인 PG 호출 오류는 Kafka 재시도 토픽으로 처리하고 반복 실패는 DLT에 기록합니다. Kafka 자체가 외부 PG 결제의 정확히 한 번 효과를 보장하지는 않으므로 payment_order_id 및 PSP nonce 멱등 검사가 필수입니다.</p><p>조정 서비스는 PG/PSP에서 받은 S3 정산 파일과 Payment·Ledger·Wallet 서비스의 조회 API를 통해 얻은 기록을 대조합니다. 다른 서비스의 운영 DB를 직접 수정하지 않으며, 조정 결과는 별도 Aurora Recon DB에 관리합니다. EventBridge Scheduler가 Spring Batch 작업을 예약하고 CloudWatch로 실패를 감시합니다. 대금 정산(pay-out)은 9페이지에 별도 흐름으로 소개합니다.</p></aside>
+  </section>
+
+  <!-- 06 -->
+  <section class="slide dark" data-title="대금 수신 흐름">
+    <div class="overline">2단계 · 대금 수신 흐름</div>
+    <h2 class="heading">대금 수신 흐름</h2>
+    <p class="deck-subtitle">PSP가 제공하는 외부 결제 페이지를 이용한다.</p>
+    <div class="payin-steps">
+      <div class="payin-step"><span class="step-hint">사용자</span><span class="count">01 / 이벤트</span><div class="step-title">결제 이벤트 생성</div><p>사용자가 주문하기 버튼을 클릭하여 결제 이벤트를 전송한다.</p></div>
+      <div class="payin-step"><span class="step-hint">결제 서비스 · Aurora</span><span class="count">02 / 저장</span><div class="step-title">결제 이벤트 저장</div><p>결제 이벤트·주문을 Payment DB에 기록한다.</p></div>
+      <div class="payin-step"><span class="step-hint">결제 실행자</span><span class="count">03 / 등록</span><div class="step-title">결제 등록 요청</div><p>동기 호출로 PG/PSP에 등록 요청을 보내고 토큰을 저장한다.</p></div>
+      <div class="payin-step"><span class="step-hint">브라우저 · PG</span><span class="count">04 / 결제</span><div class="step-title">외부 결제 페이지</div><p>사용자가 PG/PSP 결제 페이지에 신용 카드 정보를 입력한다.</p></div>
+      <div class="payin-step"><span class="step-hint">Gateway · 웹훅</span><span class="count">05 / 통지</span><div class="step-title">결제 상태 통지</div><p>PG 웹훅을 검증해 Payment DB의 결제 상태를 갱신한다.</p></div>
+      <div class="payin-step"><span class="step-hint">Kafka · 별도 서비스</span><span class="count">06 / 갱신</span><div class="step-title">지갑·원장 갱신</div><p>Kafka 결제 완료 이벤트를 각 서비스가 소비해 반영한다.</p></div>
+    </div>
+    <div class="payin-alert"><strong>핵심</strong> · 리디렉션 URL은 결제 완료 페이지, 웹훅 URL은 결제 상태를 알리는 비동기 통신에 사용한다.</div>
+    <footer class="footer"><span>도서 · 376쪽, 384~386쪽 · 외부 결제 페이지 흐름을 6단계로 요약</span><span class="page"><strong>06</strong> / 11</span></footer>
+    <aside class="speaker-notes"><p>책의 그림 11.4에 등장하는 외부 결제 페이지 흐름을 요약했습니다. 결제 등록 요청에는 금액, 통화, 만료일, 리디렉션 URL, 비중복 난수(nonce)가 포함되며 PSP는 토큰을 반환합니다.</p><p>사용자는 PG/PSP의 외부 결제 페이지에서 신용 카드 정보를 입력합니다. 결제 이후 브라우저는 리디렉션 URL로 이동하고 PSP는 비동기적으로 웹훅 URL에 결제 상태를 통지합니다.</p><p>MSA 구현에서는 결제 서비스와 결제 실행자가 동기 통신하여 최초 PG 등록과 토큰을 받아옵니다. 웹훅 처리 후 Payment DB 상태 및 Outbox 이벤트를 같은 트랜잭션으로 기록하고 Kafka에 결제 완료 이벤트를 발행합니다. Wallet, Ledger 서비스는 각각 소비자 그룹으로 이벤트를 받아 독립 DB를 갱신합니다. Outbox 릴레이는 추가 구현 요소입니다.</p></aside>
+  </section>
+
+  <!-- 07 -->
+  <section class="slide light" data-title="결제 서비스 데이터 모델">
+    <div class="overline">2단계 · 결제 서비스 데이터 모델</div>
+    <h2 class="heading">결제 서비스 데이터 모델</h2>
+    <p class="deck-subtitle">하나의 결제 이벤트(payment event)에는 여러 결제 주문(payment order)이 포함될 수 있다.</p>
+    <div class="model-layout">
+      <div class="model-column">
+        <div class="schema">
+          <div class="schema-title">Payment Event <small>결제 이벤트</small></div>
+          <div class="fields">
+            <div class="field"><b>checkout_id</b><em>PK</em></div>
+            <div class="field"><b>buyer_info</b><span>구매자 정보</span></div>
+            <div class="field"><b>is_payment_done</b><span>전체 완료 여부</span></div>
+          </div>
+        </div>
+        <div class="model-status">
+          <div class="state-label">payment_order_status · 실행 상태</div>
+          <div class="states"><div class="state">NOT_STARTED</div><span class="state-arrow">→</span><div class="state">EXECUTING</div></div>
+          <div class="states outcomes"><span class="state-arrow">↳</span><div class="state success">SUCCESS</div><div class="state fail">FAILED</div></div>
+          <p class="state-desc">결제 지연 및 실패 처리에서는 주문의 실행 상태를 추적한다.</p>
+        </div>
+      </div>
+      <div class="model-column">
+        <div class="schema">
+          <div class="schema-title">Payment Order <small>1 : N · 결제 주문</small></div>
+          <div class="fields">
+            <div class="field"><b>payment_order_id</b><em>PK</em></div>
+            <div class="field"><b>checkout_id</b><em>FK</em></div>
+            <div class="field"><b>seller_account</b><span>대금 수령할 판매자</span></div>
+            <div class="field"><b>amount / currency</b><span>금액 · 통화</span></div>
+            <div class="field"><b>payment_order_status</b><span>실행 상태</span></div>
+            <div class="field"><b>wallet_updated</b><span>잔액 반영 여부</span></div>
+            <div class="field"><b>ledger_updated</b><span>원장 반영 여부</span></div>
+          </div>
+        </div>
+        <div class="model-note"><b>금액 데이터</b> · amount는 double 대신 <b>string</b>으로 저장·전송한다.<br><span style="color:#5a8787">MSA: 결제·지갑·원장은 서비스별 Aurora DB에 저장한다.</span></div>
+      </div>
+    </div>
+    <footer class="footer"><span>도서 · 377~380쪽 · 데이터 모델 필드는 일부만 발췌</span><span class="page"><strong>07</strong> / 11</span></footer>
+    <aside class="speaker-notes"><p>책의 표 11.3과 11.4에서는 결제 이벤트와 결제 주문 두 테이블을 정의합니다. checkout_id는 한 번의 결제 행위를 식별하며 payment_order_id는 개별 결제 주문을 식별합니다. 하나의 결제 이벤트는 여러 결제 주문을 가질 수 있습니다.</p><p>payment_order_status는 NOT_STARTED, EXECUTING, SUCCESS, FAILED를 사용합니다. wallet_updated와 ledger_updated로 내부 서비스의 갱신 여부를 추적합니다. 책은 부동소수점 반올림 오류를 피하기 위해 amount를 string으로 보관할 것을 권합니다.</p><p>MSA 예시에서는 Payment DB는 결제 서비스가 관리하고 Wallet DB와 Ledger DB는 각각 별도 서비스가 소유합니다. 각 데이터베이스는 Aurora PostgreSQL을 사용한다고 가정합니다. 서비스 사이의 즉각적인 강한 일관성 대신 Kafka 이벤트와 조정으로 최종적 일관성을 맞춥니다. 데이터베이스 분리는 책의 필수 요구가 아닌 설계 선택입니다.</p></aside>
+  </section>
+
+  <!-- 08 -->
+  <section class="slide dark" data-title="정확히 한 번 전달">
+    <div class="overline">3단계 · 정확히 한 번 전달</div>
+    <h2 class="heading">정확히 한 번 전달</h2>
+    <p class="deck-subtitle">재시도와 멱등성 검사를 결합해 결제 주문이 정확히 한 번 실행되도록 한다.</p>
+    <div class="equation">
+      <div class="eq-part"><div class="title">최소 한 번 실행</div><p>재시도(retry) 메커니즘</p></div>
+      <div class="eq-symbol">+</div>
+      <div class="eq-part"><div class="title">최대 한 번 실행</div><p>멱등성(idempotency) 검사</p></div>
+      <div class="eq-symbol">=</div>
+      <div class="eq-part eq-outcome"><div class="title">정확히 한 번 실행</div><p>결제 주문의 중복 처리 방지</p></div>
+    </div>
+    <div class="cases">
+      <div class="case"><div class="case-name">시나리오 1 · 결제 버튼을 두 번 클릭</div><p>동일한 멱등 키를 가진 요청은 데이터베이스의 고유 키 제약 조건으로 중복 처리를 방지한다.</p></div>
+      <div class="case"><div class="case-name">시나리오 2 · PSP 응답이 전달되지 않음</div><p>PSP에 전달한 동일한 비중복 난수(nonce)를 재사용하여 이중 결제를 방지한다.</p></div>
+    </div>
+    <div class="idempotent-key"><span>Kafka 이벤트 재소비와 PG 재시도에도 결제 효과가 중복되지 않도록 한다.</span><code>checkout_id / payment_order_id</code></div>
+    <footer class="footer"><span>도서 · 392~396쪽 · ‘정확히 한 번 전달’은 결제 실행 결과에 대한 보장</span><span class="page"><strong>08</strong> / 11</span></footer>
+    <aside class="speaker-notes"><p>책은 '최소 한 번 실행'과 '최대 한 번 실행'을 함께 보장하면 주어진 연산이 정확히 한 번 실행될 수 있다고 설명합니다. 네트워크 메시지가 물리적으로 한 번만 전달된다는 뜻은 아니며, 재시도에도 결제 효과가 중복되지 않아야 한다는 의미로 발표합니다.</p><p>같은 멱등 키에 대해 데이터베이스 고유 키 제약 조건을 사용합니다. 책은 동시에 들어온 중복 요청에 429 Too Many Requests를 반환하는 예를 들고 PSP에 전달하는 payment_order_id를 비중복 난수로 사용합니다.</p><p>MSA 구현에서도 Kafka 소비자가 이벤트를 여러 번 읽을 수 있습니다. 각 서비스는 처리된 event_id 또는 payment_order_id를 고유 키로 관리하여 중복 반영을 방지합니다. Kafka 자체의 트랜잭션이나 Exactly Once Semantics만으로 외부 PG 결제의 정확히 한 번 효과가 보장되지는 않습니다.</p></aside>
+  </section>
+
+  <!-- 09 -->
+  <section class="slide light" data-title="결제 지연 처리와 결제 실패 처리">
+    <div class="overline">3단계 · 결제 지연 처리 / 결제 실패 처리</div>
+    <h2 class="heading">결제 지연 처리와 실패 처리</h2>
+    <div class="failure-rows">
+      <div class="failure-row"><div class="event">PSP의 위험성 검토 · 3D 보안 인증</div><h3>결제 지연 처리</h3><p>대기(pending) 상태를 표시하고 웹훅 또는 폴링으로 결제 상태를 확인한다.</p></div>
+      <div class="failure-row info"><div class="event">네트워크 오류 · 시간 초과</div><h3>재시도</h3><p>같은 멱등 키로 Kafka 재시도 토픽을 처리하고 지수적 백오프를 적용한다.</p></div>
+      <div class="failure-row warn"><div class="event">여러 차례 처리에 실패한 메시지</div><h3>실패 메시지 큐</h3><p>재시도 횟수가 임계값을 넘으면 Kafka DLT 토픽에 기록하여 조사한다.</p></div>
+    </div>
+    <div class="queue-board">
+      <div class="queue-node">결제 실패<small>재시도 가능한지 확인</small></div><div class="queue-arrow">→</div>
+      <div class="queue-node">재시도 토픽<small>Amazon MSK · Kafka</small></div><div class="queue-arrow">→</div>
+      <div class="queue-node">결제 실행자<small>Spring Kafka consumer</small></div><div class="queue-arrow">→</div>
+      <div class="queue-node dead">실패 메시지 토픽<small>Kafka DLT · 수동 조사</small></div>
+    </div>
+    <div class="queue-note">MSA 구현 예시: Kafka retry 토픽에서 재시도 · 최종 실패는 DLT · 중복 소비에 대비한 멱등성 검사 필수</div>
+    <footer class="footer"><span>도서 · 388~393쪽 · 그림 11.10의 실패한 결제 처리 흐름을 간략화</span><span class="page"><strong>09</strong> / 11</span></footer>
+    <aside class="speaker-notes"><p>책은 결제 지연 처리의 예로 PSP가 위험성을 검토하는 경우와 3D 보안 인증을 요구하는 경우를 듭니다. 이때 결제는 대기(pending) 상태이며 PSP는 웹훅이나 폴링으로 진행 상황을 알릴 수 있습니다.</p><p>결제 실패 처리에서는 결제 상태 추적, 재시도 큐 및 실패 메시지 큐를 설명합니다. 일시적 오류는 재시도 큐로, 여러 번 실패한 메시지는 실패 메시지 큐로 보냅니다. 재시도 간격으로 지수적 백오프를 권합니다.</p><p>MSA 구현에서는 Amazon MSK의 Apache Kafka를 사용하며, 책의 재시도 큐와 실패 메시지 큐를 Kafka의 retry 토픽과 Dead Letter Topic(DLT)으로 구현합니다. 최초 동기식 PG 요청이 일시적으로 실패하면 결제 주문을 retry 토픽에 발행하고 Spring Kafka 소비자가 같은 payment_order_id 및 PG nonce로 재시도합니다. Spring Kafka의 @RetryableTopic을 통해 소비자 처리 오류에 대한 비차단 재시도 및 DLT를 구성할 수 있습니다. Kafka가 알아서 지수적 백오프를 제공하는 것은 아니므로 Spring Kafka 설정이나 별도 지연 처리로 재시도 간격을 구현해야 합니다. 재시도 한도 초과 메시지를 DLT에 보관하여 확인합니다.</p></aside>
+  </section>
+
+  <!-- 10 -->
+  <section class="slide dark" data-title="복식부기 원장 시스템과 조정">
+    <div class="overline">3단계 · 조정 / 일관성</div>
+    <h2 class="heading">복식부기 원장 시스템과 조정</h2>
+    <p class="deck-subtitle">원장에 모든 거래를 기록하고 PSP의 정산 파일과 내부 결제 정보를 비교한다.</p>
+    <div class="integrity-grid">
+      <div>
+        <div class="integ-heading">1. 복식부기 원장 시스템</div>
+        <div class="ledger-journal">
+          <div class="entry"><span>구매자 계정</span><b>− $1</b></div>
+          <div class="entry"><span>판매자 계정</span><b>+ $1</b></div>
+        </div>
+        <div class="net-zero"><span>모든 거래 항목의 합계</span><strong>$0</strong></div>
+        <p class="fine" style="margin-top:25px">책의 표 11.5: 구매자 $1 차감, 판매자 $1 증가</p>
+      </div>
+      <div>
+        <div class="integ-heading">2. 조정 (reconciliation)</div>
+        <div class="recon-loop"><div class="recon-system">PSP 정산 파일<small>계좌 잔액 · 거래 내역</small></div><div class="versus">⇄</div><div class="recon-system">내부 원장·지갑<small>결제 시스템의 금융 기록</small></div></div>
+        <div class="recon-result">불일치 발견 시 자동화된 조정 작업 또는 재무팀의 수동 조사</div>
+        <div class="aws-ops-note"><strong>MSA 구현 예시 · Spring Batch 조정 작업</strong>Amazon S3 정산 파일 ↔ 서비스별 Aurora 원장·지갑<br>EventBridge Scheduler → ECS Spring Batch → CloudWatch 경보</div>
+      </div>
+    </div>
+    <div class="integ-bottom"><span class="pill">대금 정산</span><span>외상 매입금 지급 서비스 제공업체를 이용하여 판매자의 은행 계좌로 송금</span></div>
+    <footer class="footer"><span>도서 · 380~382쪽, 386~387쪽 · 대금 수신과 대금 정산을 구분</span><span class="page"><strong>10</strong> / 11</span></footer>
+    <aside class="speaker-notes"><p>책은 복식부기 원장 시스템을 설명하면서 모든 결제 거래를 두 개의 원장 계좌에 같은 금액으로 기록한다고 소개합니다. 한쪽 계좌에서 차감되면 다른 계좌에는 같은 금액이 증가하므로 전체 합계는 0이 됩니다.</p><p>조정은 외부 PSP의 정산 파일과 내부 원장 및 지갑 데이터를 비교해 불일치를 확인하는 마지막 방어선입니다. 책은 자동 조정 가능한 문제, 수동 수정이 필요한 문제, 분류할 수 없는 문제로 나눕니다.</p><p>MSA 예시에서는 PG/PSP로부터 받은 정산 파일을 Amazon S3에 저장하고 EventBridge Scheduler로 정기 ECS Fargate의 Spring Batch 조정 작업을 실행합니다. 결제, 원장, 지갑 서비스가 각각 소유한 Aurora 데이터를 서비스 API 또는 읽기 전용 정산 사본을 통해 대조합니다. 조정 서비스가 다른 서비스의 운영 DB를 직접 수정하지 않도록 데이터 소유권을 지킵니다. 불일치와 배치 실패는 CloudWatch로 감시합니다.</p><p>대금 정산 흐름에서는 외상 매입금(accounts payable) 지급 서비스 제공업체를 이용합니다.</p></aside>
+  </section>
+
+  <!-- 11 -->
+  <section class="slide light" data-title="4단계: 마무리">
+    <div class="overline">4단계 · 마무리</div>
+    <h2 class="heading">결제 시스템 설계 요약</h2>
+    <p class="deck-subtitle">PSP 연동, 조정, 결제 실패 처리, 정확히 한 번 전달, 일관성, 결제 보안</p>
+    <div class="end-grid">
+      <div class="end-item"><div class="id">01 / 상태 추적</div><h3>결제 상태 추적</h3><p>결제 주문의 실행 상태를 데이터베이스에 기록하고 실패 시 재시도 여부를 결정한다.</p></div>
+      <div class="end-item"><div class="id">02 / 멱등성</div><h3>재시도와 멱등성</h3><p>Kafka 재시도 토픽으로 실패를 복구하고 멱등성으로 중복 실행을 방지한다.</p></div>
+      <div class="end-item"><div class="id">03 / 일관성</div><h3>조정과 결제 보안</h3><p>서비스별 원장·지갑과 PSP 정산 파일을 조정하고 신용 카드 정보를 보호한다.</p></div>
+    </div>
+    <div class="end-questions"><div class="label">토론 질문</div><ul><li>PSP는 결제를 성공적으로 처리했지만 응답이 전달되지 않았다면?</li><li>원장과 지갑의 상태가 일치하지 않을 때 조정 프로세스는 어떻게 작동할까?</li><li>결제 시스템의 내부 서비스 간 통신은 동기식과 비동기식 중 무엇이 적합할까?</li></ul></div>
+    <footer class="footer"><span>도서 · 398~399쪽 · 환율·지역·현금 결제·구글/애플 페이 연동은 추가 고려 사항</span><span class="page"><strong>11</strong> / 11</span></footer>
+    <aside class="speaker-notes"><p>책의 4단계 마무리에서는 모니터링, 경보, 디버깅 도구의 필요성을 강조합니다. 결제 상태·처리 서버 기록·PSP 기록을 확인할 수 있어야 실패 원인을 조사할 수 있습니다.</p><p>책에서 더 다루어볼 주제로 환율, 지역별 결제 수단, 현금 결제, 구글/애플 페이 연동을 제시합니다. 마지막 토론 질문은 책 388~396쪽에서 소개한 PSP 응답 유실, 조정, 동기식·비동기식 통신을 바탕으로 했습니다.</p></aside>
+  </section>
+
+</main>
+
+<div class="help" aria-hidden="true">← → 이동 &nbsp; · &nbsp; F 전체화면 &nbsp; · &nbsp; N 발표자 메모 &nbsp; · &nbsp; O 전체 보기</div>
+<div class="controls" role="navigation" aria-label="슬라이드 이동">
+  <button id="prev" title="이전 슬라이드 (←)" aria-label="이전 슬라이드">‹</button>
+  <button id="overviewBtn" title="전체 슬라이드 보기 (O)" aria-label="전체 슬라이드 보기">▦</button>
+  <button id="notesBtn" title="발표자 메모 (N)" aria-label="발표자 메모">≡</button>
+  <button id="fullscreenBtn" title="전체화면 (F)" aria-label="전체화면">⛶</button>
+  <button id="next" title="다음 슬라이드 (→)" aria-label="다음 슬라이드">›</button>
+</div>
+<aside id="notesPanel" aria-live="polite"><h3>발표자 메모</h3><div id="notesContent"></div></aside>
+<div id="overview" role="dialog" aria-modal="true" aria-label="전체 슬라이드 보기"><h2>전체 슬라이드</h2><div class="thumbs" id="thumbs"></div><button class="close-overview" id="closeOverview">닫기 (Esc)</button></div>
+
+<script>
+(() => {
+  'use strict';
+  const deck = document.getElementById('deck');
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  const notesPanel = document.getElementById('notesPanel');
+  const notesContent = document.getElementById('notesContent');
+  const overview = document.getElementById('overview');
+  let index = 0;
+  function scaleDeck() {
+    const s = Math.min(window.innerWidth / 1440, window.innerHeight / 810);
+    deck.style.transform = `scale(${s})`;
+    deck.style.left = `${Math.round((window.innerWidth - 1440*s)/2)}px`;
+    deck.style.top = `${Math.round((window.innerHeight - 810*s)/2)}px`;
+  }
+  function showSlide(next, updateHash = true) {
+    index = Math.max(0, Math.min(slides.length-1, next));
+    slides.forEach((s, i) => { s.classList.toggle('active', i===index); s.setAttribute('aria-hidden', String(i!==index)); });
+    if (updateHash) history.replaceState(null, '', `#${index+1}`);
+    notesContent.innerHTML = slides[index].querySelector('.speaker-notes')?.innerHTML || '<p>메모가 없습니다.</p>';
+  }
+  function toggleNotes() { notesPanel.classList.toggle('open'); }
+  function toggleOverview(force) { overview.classList.toggle('open', typeof force === 'boolean' ? force : !overview.classList.contains('open')); }
+  function go(delta) { showSlide(index + delta); }
+  const thumbs = document.getElementById('thumbs');
+  slides.forEach((slide, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'thumb';
+    const number = document.createElement('span'); number.textContent = String(i+1).padStart(2,'0');
+    const title = document.createElement('strong'); title.textContent = slide.dataset.title;
+    btn.append(number, title);
+    btn.addEventListener('click', () => { showSlide(i); toggleOverview(false); });
+    thumbs.appendChild(btn);
+  });
+  document.getElementById('prev').addEventListener('click', () => go(-1));
+  document.getElementById('next').addEventListener('click', () => go(1));
+  document.getElementById('notesBtn').addEventListener('click', toggleNotes);
+  document.getElementById('overviewBtn').addEventListener('click', () => toggleOverview());
+  document.getElementById('closeOverview').addEventListener('click', () => toggleOverview(false));
+  document.getElementById('fullscreenBtn').addEventListener('click', () => {
+    if (!document.fullscreenElement) document.documentElement.requestFullscreen?.(); else document.exitFullscreen?.();
+  });
+  window.addEventListener('keydown', (ev) => {
+    const key = ev.key;
+    if (key.toLowerCase() === 'n') { toggleNotes(); return; }
+    if (key.toLowerCase() === 'o') { toggleOverview(); return; }
+    if (key.toLowerCase() === 'f') { if (!document.fullscreenElement) document.documentElement.requestFullscreen?.(); else document.exitFullscreen?.(); return; }
+    if (overview.classList.contains('open')) { if (key==='Escape') toggleOverview(false); return; }
+    if (key==='ArrowRight'||key==='ArrowDown'||key===' '||key==='PageDown') { ev.preventDefault(); go(1); }
+    if (key==='ArrowLeft'||key==='ArrowUp'||key==='PageUp') { ev.preventDefault(); go(-1); }
+    if (key==='Home') showSlide(0);
+    if (key==='End') showSlide(slides.length-1);
+    if (key==='Escape') notesPanel.classList.remove('open');
+  });
+  let touchX = null;
+  window.addEventListener('touchstart', e => { touchX = e.touches[0]?.clientX ?? null; }, {passive:true});
+  window.addEventListener('touchend', e => {
+    if (touchX === null) return;
+    const diff = (e.changedTouches[0]?.clientX ?? touchX) - touchX;
+    if (Math.abs(diff) > 65) go(diff < 0 ? 1 : -1);
+    touchX = null;
+  }, {passive:true});
+  window.addEventListener('resize', scaleDeck);
+  window.addEventListener('hashchange', () => { const n = Number(location.hash.slice(1)); if (Number.isInteger(n)) showSlide(n-1, false); });
+  scaleDeck();
+  const initial = Number(location.hash.slice(1));
+  showSlide(Number.isInteger(initial) && initial>=1 ? initial-1 : 0, !location.hash);
+})();
+</script>
+</body>
+</html>
