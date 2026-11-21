@@ -65,8 +65,8 @@ jobs:
                   failures.append(topic["id"])
           if failures:
               raise SystemExit("AI image comparison missing for: " + ", ".join(failures))
-          PY
           pdfs = [p for topic in data["topics"] for p in topic["presentations"] if p.get("format") == "PDF"]
           if not pdfs or any(p["status"] != "AI 요약" for p in pdfs):
               raise SystemExit("AI summary missing for a submitted presentation PDF.")
           print(f"AI summarized {len(pdfs)} presentation PDF(s).")
+          PY
