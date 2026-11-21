@@ -77,7 +77,7 @@
         <li><span>2장</span><strong><button type="button" class="study-book-chapter" data-chapter="2" aria-controls="study-chapter-detail">주변 친구</button></strong><span>41쪽 · 설계 범위 42쪽</span></li>
         <li><span>3장</span><strong><button type="button" class="study-book-chapter" data-chapter="3" aria-controls="study-chapter-detail">구글 맵</button></strong><span>73쪽 · 설계 범위 73쪽</span></li>
         <li><span>4장</span><strong><button type="button" class="study-book-chapter" data-chapter="4" aria-controls="study-chapter-detail">분산 메시지 큐</button> <small>3주차 발표</small></strong><span>113쪽 · 설계 범위 114쪽</span></li>
-        <li class="study-book-current"><span>5장</span><strong><button type="button" class="study-book-chapter" data-chapter="5" aria-controls="study-chapter-detail">지표 모니터링 및 경보 시스템</button> <small>2주차 발표</small></strong><span>159쪽 · 설계 범위 159쪽</span><button type="button" class="study-secondary" data-view="topic" data-topic="week02-monitoring">설계 비교 열기 →</button></li>
+        <li><span>5장</span><strong><button type="button" class="study-book-chapter" data-chapter="5" aria-controls="study-chapter-detail">지표 모니터링 및 경보 시스템</button> <small>2주차 발표</small></strong><span>159쪽 · 설계 범위 159쪽</span></li>
         <li><span>6장</span><strong><button type="button" class="study-book-chapter" data-chapter="6" aria-controls="study-chapter-detail">광고 클릭 이벤트 집계</button> <small>6주차 발표</small></strong><span>191쪽 · 설계 범위 192쪽</span></li>
         <li><span>7장</span><strong><button type="button" class="study-book-chapter" data-chapter="7" aria-controls="study-chapter-detail">호텔 예약 시스템</button> <small>3주차 참고</small></strong><span>231쪽 · 설계 범위 231쪽</span></li>
         <li><span>8장</span><strong><button type="button" class="study-book-chapter" data-chapter="8" aria-controls="study-chapter-detail">분산 이메일 서비스</button> <small>3주차 참고</small></strong><span>265쪽 · 설계 범위 265쪽</span></li>
@@ -105,6 +105,12 @@
           <ul class="study-chapter-requirements" data-chapter-requirements></ul>
         </div>
       </div>
+      <section class="study-block" data-chapter-materials hidden aria-labelledby="study-chapter-materials-title">
+        <h2 id="study-chapter-materials-title">발표 자료와 설계 PR</h2>
+        <div data-chapter-topic></div>
+        <div data-chapter-presentations></div>
+        <div data-chapter-design-materials></div>
+      </section>
     </section>
 
     <section data-page="topic" aria-labelledby="study-topic-title" hidden>
@@ -119,6 +125,7 @@
       <section class="study-block" aria-labelledby="study-presentation-title">
         <h2 id="study-presentation-title">발표 자료</h2>
         <div data-presentations></div>
+        <div data-design-materials></div>
       </section>
       <section class="study-block" aria-labelledby="study-compare-title">
         <div class="study-heading">
@@ -138,6 +145,13 @@
       </section>
     </section>
   </main>
+  <dialog class="study-mermaid-dialog" aria-labelledby="study-mermaid-title" data-mermaid-dialog>
+    <div class="study-heading">
+      <h2 id="study-mermaid-title">Mermaid 설계 다이어그램</h2>
+      <form method="dialog"><button type="submit" class="study-secondary" autofocus>닫기</button></form>
+    </div>
+    <div class="study-mermaid-stage"><img alt="확대된 Mermaid 설계 다이어그램" data-mermaid-large></div>
+  </dialog>
 </section>
 
 <style>
@@ -209,11 +223,13 @@
   #study-dashboard-preview .study-agenda .study-list li { grid-template-columns: minmax(0, 1fr) auto; }
   #study-dashboard-preview .study-agenda .study-list li > span { grid-column: 1 / -1; }
   #study-dashboard-preview .study-roadmap { display: grid; gap: 7px; margin-top: 12px; }
-  #study-dashboard-preview .study-week-link { display: grid; grid-template-columns: 58px 70px minmax(0, 1fr); align-items: baseline; gap: 12px; width: 100%; padding: 11px 13px; border: 1px solid var(--line); border-radius: 9px; background: var(--page); text-align: start; cursor: pointer; }
+  #study-dashboard-preview .study-week-link { display: grid; gap: 6px; width: 100%; padding: 12px 14px; border: 1px solid var(--line); border-radius: 9px; background: var(--page); text-align: start; cursor: pointer; }
   #study-dashboard-preview .study-week-link[aria-pressed="true"] { border-color: var(--button); background: var(--accent-page); }
   #study-dashboard-preview .study-week-link strong { font-size: 13px; }
   #study-dashboard-preview .study-week-link time { font-size: 12px; color: var(--muted-ink); }
-  #study-dashboard-preview .study-week-topics { font-size: 13px; }
+  #study-dashboard-preview .study-week-heading { display: flex; align-items: baseline; gap: 12px; }
+  #study-dashboard-preview .study-week-topics { display: grid; gap: 4px; padding-inline-start: 10px; border-inline-start: 2px solid var(--line); font-size: 13px; }
+  #study-dashboard-preview .study-week-presenters { color: var(--muted-ink); font-size: 12px; }
   #study-dashboard-preview .study-presenters { display: block; margin-top: 3px; color: var(--accent-ink); font-size: 12px; font-weight: 500; }
   #study-dashboard-preview .study-topic-presenters { margin-top: 8px; }
   #study-dashboard-preview .study-calendar-presenters { display: block; margin-top: 4px; font-size: 10px; color: var(--accent-ink); }
@@ -269,6 +285,37 @@
   #study-dashboard-preview .study-compare-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 14px; background: var(--page); }
   #study-dashboard-preview .study-compare-wrap table[data-many] { min-width: 760px; }
   #study-dashboard-preview .study-compare-wrap td { white-space: pre-wrap; }
+  #study-dashboard-preview .study-markdown { min-width: 0; overflow-x: auto; white-space: normal; }
+  #study-dashboard-preview .study-markdown > * { margin: 0; }
+  #study-dashboard-preview .study-markdown > * + * { margin-top: 10px; }
+  #study-dashboard-preview .study-markdown :is(ul, ol) { padding-inline-start: 20px; }
+  #study-dashboard-preview .study-markdown :is(h1, h2, h3, h4, h5, h6) { font-size: 1em; }
+  #study-dashboard-preview .study-markdown pre { padding: 10px; background: var(--quiet-page); overflow-x: auto; }
+  #study-dashboard-preview .study-mermaid img {
+    display: block; width: 100%; height: auto; padding: 8px; background: #fff;
+    border: 1px solid var(--line); border-radius: 8px;
+  }
+  #study-dashboard-preview .study-mermaid-open {
+    display: grid; gap: 4px; width: 100%; padding: 0; border: 0;
+    background: transparent; color: var(--accent-ink); font-size: 12px; text-align: end;
+  }
+  #study-dashboard-preview .study-mermaid-open img { cursor: zoom-in; }
+  #study-dashboard-preview .study-mermaid-dialog {
+    width: min(96vw, 1280px); max-width: none; max-height: 92dvh; padding: clamp(12px, 3vw, 24px);
+    border: 1px solid var(--line); border-radius: 14px; background: var(--page); color: var(--ink);
+  }
+  #study-dashboard-preview .study-mermaid-dialog::backdrop { background: rgb(16 25 36 / 72%); }
+  #study-dashboard-preview .study-mermaid-stage {
+    max-height: 76dvh; overflow: auto; border-radius: 8px; background: #fff; padding: 12px;
+  }
+  #study-dashboard-preview .study-mermaid-stage img {
+    display: block; width: 100%; min-width: min(560px, 85vw); height: auto; margin-inline: auto;
+  }
+  #study-dashboard-preview .study-mermaid summary {
+    margin-top: 6px; color: var(--accent-ink); font-size: 12px; cursor: pointer;
+  }
+  #study-dashboard-preview .study-markdown :is(th, td) { padding: 6px 8px; white-space: normal; }
+  #study-dashboard-preview .study-markdown thead th:first-child { width: auto; }
   #study-dashboard-preview table { border-collapse: collapse; table-layout: fixed; width: 100%; font-size: 14px; }
   #study-dashboard-preview th, #study-dashboard-preview td { border-bottom: 1px solid var(--line); vertical-align: top; text-align: start; padding: 14px 16px; }
   #study-dashboard-preview thead { background: var(--quiet-page); }
@@ -297,7 +344,6 @@
     color: var(--button-ink);
   }
   #study-dashboard-preview button:not(:disabled) { cursor: pointer; }
-  #study-dashboard-preview .study-roadmap { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   #study-dashboard-preview .study-topic-group .study-heading { border-bottom: 1px solid var(--line); padding-bottom: 12px; }
   #study-dashboard-preview .study-common { border-inline-start: 3px solid var(--button); padding: 16px; }
   #study-dashboard-preview .study-diagram img { height: clamp(130px, 19vw, 250px); }
@@ -317,7 +363,6 @@
     @keyframes study-enter { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
   }
   @media (max-width: 880px) {
-    #study-dashboard-preview .study-roadmap { grid-template-columns: minmax(0, 1fr); }
   }
   @media (max-width: 560px) {
     #study-dashboard-preview .study-calendar { padding: 11px; }
@@ -328,24 +373,25 @@
     #study-dashboard-preview .study-calendar-presenters { display: none; }
     #study-dashboard-preview .study-calendar-week { text-align: center; font-size: 10px; }
     #study-dashboard-preview .study-agenda { grid-template-columns: minmax(0, 1fr); gap: 12px; }
-    #study-dashboard-preview .study-week-link { grid-template-columns: 48px 60px minmax(0, 1fr); gap: 6px; padding: 10px; }
+    #study-dashboard-preview .study-week-link { padding: 10px; }
     #study-dashboard-preview .study-bar { gap: 6px 12px; }
     #study-dashboard-preview .study-demo { display: none; }
     #study-dashboard-preview .study-context { grid-template-columns: minmax(0, 1fr); }
     #study-dashboard-preview .study-context > div:nth-child(2) { border-inline-start: 0; border-top: 1px solid var(--line); }
-    #study-dashboard-preview table, #study-dashboard-preview thead, #study-dashboard-preview tbody { display: block; }
+    #study-dashboard-preview .study-compare-wrap > table,
+    #study-dashboard-preview .study-compare-wrap > table > :is(thead, tbody) { display: block; }
     #study-dashboard-preview .study-compare-wrap table[data-many] { min-width: 0; }
-    #study-dashboard-preview tr { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    #study-dashboard-preview table[data-count="3"] tr { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-    #study-dashboard-preview tr > :first-child { grid-column: 1 / -1; width: auto; background: var(--quiet-page); }
-    #study-dashboard-preview td::before { content: attr(data-author); display: block; color: var(--muted-ink); font-size: 12px; }
+    #study-dashboard-preview .study-compare-wrap > table > * > tr { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    #study-dashboard-preview .study-compare-wrap > table[data-count="3"] > * > tr { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    #study-dashboard-preview .study-compare-wrap > table > * > tr > :first-child { grid-column: 1 / -1; width: auto; background: var(--quiet-page); }
+    #study-dashboard-preview td[data-author]::before { content: attr(data-author); display: block; color: var(--muted-ink); font-size: 12px; }
     #study-dashboard-preview .study-list li { grid-template-columns: 3em minmax(0, 1fr); }
     #study-dashboard-preview .study-list li > :last-child { grid-column: 2; justify-self: start; }
     #study-dashboard-preview .study-book-list li { grid-template-columns: 2.7em minmax(0, 1fr); }
     #study-dashboard-preview .study-book-list li > span:last-of-type { grid-column: 2; }
   }
   @media (max-width: 400px) {
-    #study-dashboard-preview table[data-count="3"] tr { grid-template-columns: minmax(0, 1fr); }
+    #study-dashboard-preview .study-compare-wrap > table[data-count="3"] > * > tr { grid-template-columns: minmax(0, 1fr); }
   }
   @media (pointer: coarse) {
     #study-dashboard-preview button { min-height: 44px; }
@@ -528,25 +574,46 @@
     }
   };
   const chapterBack = root.querySelector('[data-chapter-back]');
+  const chapterTopics = {
+    4: 'week03-message-queue', 5: 'week02-monitoring', 6: 'week06-ad-click',
+    7: 'week03-reservation-notification', 8: 'week03-reservation-notification',
+    10: 'week06-leaderboard', 11: 'week04-payment', 12: 'week04-wallet', 13: 'week07-stock-exchange',
+  };
   let selectedChapterButton;
 
-  root.querySelectorAll('[data-chapter]').forEach(button => button.addEventListener('click', () => {
+  root.querySelectorAll('[data-chapter]').forEach(button => {
     const number = button.dataset.chapter;
-    const chapter = chapters[number];
-    root.querySelector('[data-chapter-number]').textContent = '교재 ' + number + '장';
-    root.querySelector('[data-chapter-title]').textContent = button.textContent;
-    root.querySelector('[data-chapter-source]').textContent = '인쇄본 ' + chapter.pages + '쪽 · 문제 이해 및 설계 범위';
-    root.querySelector('[data-chapter-background]').textContent = chapter.background;
-    const items = chapter.requirements.map(requirement => {
-      const item = document.createElement('li');
-      item.textContent = requirement;
-      return item;
+    const topic = data.topics.find(item => item.id === chapterTopics[number]);
+    if (topic) {
+      const row = button.closest('li');
+      row.classList.add('study-book-current');
+      row.insertAdjacentHTML('beforeend', topicButton(topic, false,
+        '발표 자료 ' + topic.presentations.length + '건 · 설계 PR ' + topic.designs.length + '건'));
+    }
+    button.addEventListener('click', () => {
+      const chapter = chapters[number];
+      root.querySelector('[data-chapter-number]').textContent = '교재 ' + number + '장';
+      root.querySelector('[data-chapter-title]').textContent = button.textContent;
+      root.querySelector('[data-chapter-source]').textContent = '인쇄본 ' + chapter.pages + '쪽 · 문제 이해 및 설계 범위';
+      root.querySelector('[data-chapter-background]').textContent = chapter.background;
+      const items = chapter.requirements.map(requirement => {
+        const item = document.createElement('li');
+        item.textContent = requirement;
+        return item;
+      });
+      root.querySelector('[data-chapter-requirements]').replaceChildren(...items);
+      root.querySelector('[data-chapter-materials]').hidden = !topic;
+      if (topic) {
+        root.querySelector('[data-chapter-topic]').innerHTML = topicButton(topic, false,
+          topic.designs.length ? '설계 비교 열기 · PR ' + topic.designs.length + '건' : '주차 주제 보기');
+        root.querySelector('[data-chapter-presentations]').innerHTML = renderPresentations(topic);
+        root.querySelector('[data-chapter-design-materials]').innerHTML = renderDesignMaterials(topic);
+      }
+      selectedChapterButton = button;
+      show('chapter');
+      chapterBack.focus();
     });
-    root.querySelector('[data-chapter-requirements]').replaceChildren(...items);
-    selectedChapterButton = button;
-    show('chapter');
-    chapterBack.focus();
-  }));
+  });
   chapterBack.addEventListener('click', () => {
     show('book');
     selectedChapterButton.focus();
@@ -701,13 +768,15 @@
       next.map(topic => topicRow(topic)).join('') || '<li>등록된 새 발표 주제가 없습니다.</li>';
     root.querySelector('[data-roadmap]').innerHTML = meetings.map(item => {
       const topics = data.topics.filter(topic => topic.week === item.week);
-      const names = item.week === 8 ? '트래픽 버티기 챌린지' :
-        topics.map(topic => topic.title).join(' · ') || '주제 조율';
+      const rows = topics.map(topic => {
+        const names = presenterNames([topic]);
+        return '<span>' + escapeHtml(topic.title) +
+          (names ? ' <span class="study-week-presenters">— ' + escapeHtml(names) + '</span>' : '') + '</span>';
+      }).join('') || '<span>' + (item.week === 8 ? '트래픽 버티기 챌린지' : '주제 조율') + '</span>';
       return '<button type="button" class="study-week-link" data-week="' + item.week +
-        '" aria-pressed="' + (item.week === selectedWeek) + '"><strong>' + item.week +
+        '" aria-pressed="' + (item.week === selectedWeek) + '"><span class="study-week-heading"><strong>' + item.week +
         '주차</strong><time datetime="' + item.date + '">' + day(item.date) +
-        '</time><span class="study-week-topics">' + escapeHtml(names) +
-        '<span class="study-presenters">' + escapeHtml(presenterNames(topics)) + '</span></span></button>';
+        '</time></span><span class="study-week-topics">' + rows + '</span></button>';
     }).join('');
   }
 
@@ -746,6 +815,30 @@
     ).join('') + '</ul>';
   }
 
+  function renderPresentations(topic) {
+    return topic.presentations.map(presentation => {
+      const link = '<a target="_blank" rel="noopener noreferrer" href="' + escapeHtml(presentation.url) +
+        '">원본 ' + escapeHtml(presentation.format || 'PDF') + ' ↗</a>';
+      const hasSummary = ['background', 'requirements', 'flow'].some(key => presentation[key]?.length);
+      const summary = hasSummary ? '<div class="study-context"><div><h3>도메인 배경</h3>' +
+        evidence(presentation.background) + '</div><div><h3>공통 요구사항</h3>' +
+        evidence(presentation.requirements) + '</div><div class="study-flow"><h3>발표 자료의 처리 흐름</h3>' +
+        evidence(presentation.flow) + '</div></div>' : '';
+      return '<article class="study-presentation"><div class="study-heading"><div><h3>' +
+        escapeHtml(presentation.title) + '</h3><p class="study-muted">' + escapeHtml(presentation.status) +
+        '</p></div>' + link + '</div>' + summary + '</article>';
+    }).join('') || '<p class="study-muted">등록된 발표 자료가 없습니다.</p>';
+  }
+
+  function renderDesignMaterials(topic) {
+    const links = topic.designs.flatMap(design => (design.materials || []).map(material =>
+      '<li><a target="_blank" rel="noopener noreferrer" href="' + escapeHtml(material.url) +
+      '">' + escapeHtml(material.title) + ' · HTML ↗</a> <small>' +
+      escapeHtml(design.author) + ' · PR #' + design.number + '</small></li>'));
+    return links.length ? '<div class="study-presentation"><h3>설계 참고 자료</h3><ul class="study-evidence">' +
+      links.join('') + '</ul></div>' : '';
+  }
+
   function renderTopic() {
     const topic = selectedTopic;
     root.querySelector('[data-topic-week]').textContent = topic.week + '주차 발표 주제';
@@ -764,15 +857,8 @@
       escapeHtml(topic.context.background) + '</p></div><div><h2>공통 설계 범위</h2>' +
       evidence(topic.context.requirements.map(text => ({text}))) + '</div></div><p class="study-muted">' +
       escapeHtml(topic.context.note) + '</p>' : '';
-    root.querySelector('[data-presentations]').innerHTML = topic.presentations.map(presentation =>
-      '<article class="study-presentation"><div class="study-heading"><div><h3>' +
-      escapeHtml(presentation.title) + '</h3><p class="study-muted">' + escapeHtml(presentation.status) +
-      '</p></div><a target="_blank" rel="noopener noreferrer" href="' + escapeHtml(presentation.url) +
-      '">원본 ' + escapeHtml(presentation.format || 'PDF') + ' ↗</a></div><div class="study-context"><div><h3>도메인 배경</h3>' +
-      evidence(presentation.background) + '</div><div><h3>공통 요구사항</h3>' +
-      evidence(presentation.requirements) + '</div><div class="study-flow"><h3>발표 자료의 처리 흐름</h3>' +
-      evidence(presentation.flow) + '</div></div></article>'
-    ).join('') || '<p class="study-muted">발표 자료 제출 대기</p>';
+    root.querySelector('[data-presentations]').innerHTML = renderPresentations(topic);
+    root.querySelector('[data-design-materials]').innerHTML = renderDesignMaterials(topic);
     renderComparison();
   }
 
@@ -794,6 +880,64 @@
     return '<a class="study-design-source" target="_blank" rel="noopener noreferrer" href="' +
       escapeHtml(diagram?.url || design.url) + '">PR #' + design.number +
       (diagram ? ' · 이미지 ' + image : ' · 원문') + ' ↗</a>';
+  }
+
+  let mermaidLibrary;
+  let mermaidId = 0;
+  const mermaidDialog = root.querySelector('[data-mermaid-dialog]');
+  const mermaidLarge = mermaidDialog.querySelector('[data-mermaid-large]');
+
+  async function renderMermaid() {
+    const blocks = comparison.querySelectorAll('.study-markdown pre > code.language-mermaid');
+    if (!blocks.length) return;
+    mermaidLibrary ??= import('https://cdn.jsdelivr.net/npm/mermaid@12.3.0/dist/mermaid.esm.min.mjs')
+      .then(({default: mermaid}) => {
+        mermaid.initialize({startOnLoad: false, securityLevel: 'strict', htmlLabels: false, suppressErrorRendering: true});
+        return mermaid;
+      })
+      .catch(() => {
+        mermaidLibrary = undefined;
+        return null;
+      });
+    const mermaid = await mermaidLibrary;
+    if (!mermaid) return;
+
+    for (const block of blocks) {
+      if (!block.isConnected) continue;
+      const source = block.textContent.trim()
+        .replace(/^---[ \t]*\r?\n[\s\S]*?\r?\n---[ \t]*(?:\r?\n|$)/, '')
+        .replace(/%%\{[\s\S]*?\}%%/g, '').trim();
+      try {
+        const {svg} = await mermaid.render('study-mermaid-' + ++mermaidId, source);
+        const image = document.createElement('img');
+        image.alt = 'Mermaid 설계 다이어그램';
+        image.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+        await image.decode();
+        if (!block.isConnected) continue;
+        const container = document.createElement('div');
+        container.className = 'study-mermaid';
+        const open = document.createElement('button');
+        open.type = 'button';
+        open.className = 'study-mermaid-open';
+        open.setAttribute('aria-haspopup', 'dialog');
+        const openLabel = document.createElement('span');
+        openLabel.textContent = '다이어그램 확대';
+        open.append(image, openLabel);
+        open.addEventListener('click', () => {
+          mermaidLarge.src = image.src;
+          mermaidDialog.showModal();
+        });
+        const details = document.createElement('details');
+        const summary = document.createElement('summary');
+        summary.textContent = 'Mermaid 원본 코드 보기';
+        const original = block.parentElement;
+        original.replaceWith(container);
+        details.append(summary, original);
+        container.append(open, details);
+      } catch {
+        // Keep the original code available if this diagram could not be rendered.
+      }
+    }
   }
 
   function renderComparison() {
@@ -844,11 +988,14 @@
       return cell ? escapeHtml(cell.text) + renderSource(design, cell.image) : '근거 확인 필요';
     })).join('');
     const rows = row('설계 이미지 · 필수', renderDiagrams) + differences + fields.map(([label, key]) =>
-      row(label, design => escapeHtml(design[key] || 'PR 원문 확인'))).join('');
+      row(label, design => design.markdownHtml?.[key]
+        ? '<div class="study-markdown">' + design.markdownHtml[key] + '</div>'
+        : escapeHtml(design[key] || 'PR 원문 확인'))).join('');
     comparison.innerHTML = '<table role="table" aria-label="작성자별 설계 비교" data-count="' + visible.length + '"' +
       (visible.length > 3 ? ' data-many' : '') + '><thead role="rowgroup"><tr role="row">' +
       '<th scope="col" role="columnheader">비교 항목</th>' + headings +
       '</tr></thead><tbody role="rowgroup">' + rows + '</tbody></table>';
+    void renderMermaid();
   }
 
   filters.forEach(button => button.addEventListener('click', () => {

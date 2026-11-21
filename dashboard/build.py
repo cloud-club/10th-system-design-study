@@ -16,6 +16,8 @@ import unicodedata
 from urllib.parse import quote, unquote, urlsplit
 from zoneinfo import ZoneInfo
 
+from markdown_it import MarkdownIt
+
 from comparison import compare_topic
 from presentation import analyze_pdf
 
@@ -36,6 +38,8 @@ IMAGE_LINK = re.compile(
 )
 IMAGE_ATTRIBUTE = re.compile(r"""\s(src|alt)\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))""", re.I)
 IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg", ".webp", ".gif", ".svg", ".avif"}
+MARKDOWN = MarkdownIt("commonmark", {"html": False}).enable(["table", "strikethrough"]).disable("image")
+DESIGN_MARKDOWN_FIELDS = ("architecture", "decision", "tradeoff")
 
 
 def normalized(text):
@@ -81,33 +85,40 @@ def resolve_topic(topics, pr, paths):
 
 def design_sections(body):
     body = re.sub(r"<!--.*?-->", "", body, flags=re.S)
-    headings = list(re.finditer(r"(?m)^(#{1,6})\s+([^\n]+)", body))
+    lines = body.splitlines(keepends=True)
+    tokens = MARKDOWN.parse(body)
+    headings = [(token.map[0], token.map[1], int(token.tag[1]), tokens[index + 1].content)
+                for index, token in enumerate(tokens) if token.type == "heading_open" and token.level == 0]
     consumed_until = 0
-    for index, heading_match in enumerate(headings):
-        if heading_match.start() < consumed_until:
+    for index, (start, end, level, heading) in enumerate(headings):
+        if start < consumed_until:
             continue
-        heading = heading_match[2]
         key = next((key for key, pattern in FIELDS.items() if re.search(pattern, heading, re.I)), None)
         if key:
-            consumed_until = next((following.start() for following in headings[index + 1:]
-                                   if len(following[1]) <= len(heading_match[1])), len(body))
-            yield key, body[heading_match.end():consumed_until]
+            consumed_until = next((following[0] for following in headings[index + 1:]
+                                   if following[2] <= level), len(lines))
+            yield key, "".join(lines[end:consumed_until])
 
 
 def design_fields(body):
     fields = {}
     for key, contents in design_sections(body):
-        if key == "architecture":
-            contents = IMAGE_LINK.sub("", contents)
-        lines = []
-        for line in contents.splitlines():
-            line = line.strip()
-            if (not line or line.startswith((">", "\x60\x60\x60", "~~~")) or
-                    line in {"-", "---", "**내용**", "**설계도**", "**설계 설명**", "내용"}):
+        lines = contents.splitlines()
+        literal_lines = {line for token in MARKDOWN.parse(contents) if token.type in {"fence", "code_block"}
+                         for line in range(*token.map)}
+        for index, line in enumerate(lines):
+            if index in literal_lines:
                 continue
-            lines.append(line)
-        if lines and key not in fields:
-            fields[key] = "\n".join(lines)[:2500]
+            if key == "architecture":
+                line = IMAGE_LINK.sub("", line)
+            if line.strip().startswith(">") or line.strip() in {
+                "-", "---", "**내용**", "**설계도**", "**설계 설명**", "내용",
+            }:
+                line = ""
+            lines[index] = line
+        markdown = "\n".join(lines).strip("\n")
+        if markdown.strip() and key not in fields:
+            fields[key] = markdown
     return fields
 
 
@@ -300,10 +311,20 @@ def build_model(topics, snapshot, read, today, cache_dir=None):
             unique_images.setdefault(diagram["url"], diagram)
         user = (pr.get("user") or {}).get("login") or "작성자 정보 없음"
         author = re.match(r"^\[[^\]]+\]\s*(.+?)\s+-\s+", pr["title"])
+        design_dirs = {PurePosixPath(file["filename"]).parent for file in docs}
+        materials = []
+        for file in files:
+            path = PurePosixPath(file["filename"])
+            if (path.parent in design_dirs and path.suffix.lower() == ".html" and
+                    re.search(r"설계|architecture|design", path.stem, re.I)):
+                materials.append({
+                    "title": path.stem.replace("-", " "),
+                    "url": f"https://github.com/{head_repo}/blob/{quote(head_ref, safe='')}/{quote(path.as_posix())}",
+                })
         if trusted:
             trusted_designs.add(int(pr["number"]))
         result[topic_id]["designs"].append({
-            **fields, "images": list(unique_images.values()), "author": author[1] if author else user,
+            **fields, "images": list(unique_images.values()), "materials": materials, "author": author[1] if author else user,
             "login": user, "number": int(pr["number"]),
             "title": pr["title"], "url": url, "state": "draft" if is_open and pr.get("draft") else
             ("open" if is_open else "merged"),
@@ -345,7 +366,15 @@ def build_model(topics, snapshot, read, today, cache_dir=None):
 
 def write_dashboard(output, data):
     body = (ROOT / "template.html").read_text(encoding="utf-8")
-    payload = json.dumps(data, ensure_ascii=False).replace("<", "\\u003c")
+    topics = []
+    for topic in data["topics"]:
+        designs = [
+            {**design, "markdownHtml": {field: MARKDOWN.render(design[field])
+                                        for field in DESIGN_MARKDOWN_FIELDS if design.get(field)}}
+            for design in topic["designs"]
+        ]
+        topics.append({**topic, "designs": designs})
+    payload = json.dumps({**data, "topics": topics}, ensure_ascii=False).replace("<", "\\u003c")
     assert body.count("__DASHBOARD_DATA__") == 1
     page = (
         '<!doctype html>\n<html lang="ko"><head><meta charset="utf-8">'

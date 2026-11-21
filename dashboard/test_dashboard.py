@@ -36,6 +36,20 @@ class DashboardTests(unittest.TestCase):
         body = "## 3. 아키텍처 설계도\n> 예시: Kafka\n**설계도**\n-\n## 4. 기술 선택 근거\n**내용**\nDB 트랜잭션을 사용합니다.\n"
         self.assertEqual(build.design_fields(body), {"decision": "DB 트랜잭션을 사용합니다."})
 
+    def test_design_markdown_keeps_structure_and_escapes_untrusted_html(self):
+        body = ("## 아키텍처 설계도\n\n1. **수집**\n   - 저장\n\n"
+                "| 구성 | 역할 |\n| --- | --- |\n| DB | 저장 |\n\n"
+                "```bash\n# 기술 선택\n  echo test\n```\n\n"
+                "<script>alert(1)</script>\n\n[링크](javascript:alert%281%29)\n"
+                "## 기술 선택 근거\n트랜잭션을 사용합니다.")
+        fields = build.design_fields(body)
+        html = build.MARKDOWN.render(fields["architecture"])
+        for fragment in ("<ol>", "<ul>", "<strong>수집</strong>", "<table>", "  echo test", "&lt;script&gt;"):
+            self.assertIn(fragment, html)
+        self.assertNotIn("<script>", html)
+        self.assertNotIn('href="javascript:', html)
+        self.assertEqual(fields["decision"], "트랜잭션을 사용합니다.")
+
     def test_real_week03_headings_keep_nested_diagrams_and_decisions(self):
         body = ("## 3. 아키텍처 설계도\n### 전체 구조\n![전체](./images/base.svg)\n예약과 재고를 함께 관리합니다.\n"
                 "## 4. 기술 선택 근거\n### 4.1. DB 잠금\n동일 트랜잭션으로 갱신합니다.\n"

@@ -149,7 +149,7 @@ def compare_designs(title, designs, key, model, cache_dir, image_data):
     image_budget = 32 * 1024 * 1024  # Base64 characters across the request.
     for design in designs:
         number = design["number"]
-        text = {field: design[field] for field in ("architecture", "decision", "tradeoff", "common") if field in design}
+        text = {field: design[field][:2500] for field in ("architecture", "decision", "tradeoff", "common") if field in design}
         image_refs = {0} if text else set()
         seen_images = set()
         start = len(content)
