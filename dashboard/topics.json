@@ -1,0 +1,13 @@
+[
+  {"id":"week02-monitoring","week":2,"title":"모니터링 및 경보 시스템","aliases":["모니터링","monitoring","alerting"],"presenters":["윤서영","이유석"],"presenterScope":"topic"},
+  {"id":"week03-message-queue","week":3,"title":"분산 메시지 큐","aliases":["메시지 큐","메세지 큐","message queue","트래픽 완충"],"presenters":["신준수"],"presenterScope":"topic"},
+  {"id":"week03-reservation-notification","week":3,"title":"예약 및 분산 알림","aliases":["예약","분산 알림","분산 이메일","reservation","notification"],"presenters":["김동욱"],"presenterScope":"topic"},
+  {"id":"week04-payment","week":4,"title":"결제 시스템","aliases":["결제","payment"],"presenters":["고태현"],"presenterScope":"topic"},
+  {"id":"week04-wallet","week":4,"title":"전자 지갑","aliases":["전자 지갑","wallet"],"presenters":["이예슬"],"presenterScope":"topic"},
+  {"id":"week05-chatbot","week":5,"title":"AI 챗봇","aliases":["챗봇","chatbot","chat bot"],"presenters":["이재준","이정인"],"presenterScope":"week"},
+  {"id":"week05-agent","week":5,"title":"도구 활용 Agent","aliases":["agent","에이전트"],"presenters":["이재준","이정인"],"presenterScope":"week"},
+  {"id":"week06-ad-click","week":6,"title":"광고 클릭 이벤트 집계","aliases":["광고 클릭","ad click"],"presenters":["이서영","신재호"],"presenterScope":"week"},
+  {"id":"week06-leaderboard","week":6,"title":"실시간 게임 순위표","aliases":["순위표","랭킹","leaderboard"],"presenters":["이서영","신재호"],"presenterScope":"week"},
+  {"id":"week07-stock-exchange","week":7,"title":"증권 거래소","aliases":["증권 거래소","stock exchange"],"presenters":["이승준"],"presenterScope":"topic"},
+  {"id":"week07-cloud","week":7,"title":"클라우드 리소스 프로비저닝·오케스트레이션","aliases":["프로비저닝","오케스트레이션","provisioning","orchestration"],"presenters":["정장우"],"presenterScope":"topic"}
+]
