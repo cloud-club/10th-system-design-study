@@ -1,0 +1,68 @@
+name: Study dashboard test
+
+on:
+  push:
+    branches: [test]
+    paths:
+      - 'dashboard/**'
+      - '.github/workflows/study-dashboard-test.yml'
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - run: python -m pip install pypdf==6.10.0
+      - run: python -m unittest discover -s dashboard -v
+      - name: Build dashboard from real study PRs
+        env:
+          GH_TOKEN: ${{ github.token }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          OPENAI_MODEL: ${{ vars.OPENAI_MODEL }}
+        run: python dashboard/build.py _site/index.html --branch main
+      - uses: actions/upload-artifact@v4
+        with:
+          name: study-dashboard-test
+          path: _site/index.html
+          if-no-files-found: error
+      - name: Verify live AI image comparison
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          if not os.environ.get("OPENAI_API_KEY"):
+              raise SystemExit("OPENAI_API_KEY is unavailable to this workflow.")
+          html = Path("_site/index.html").read_text(encoding="utf-8")
+          payload = html.split('id="study-dashboard-data" type="application/json">', 1)[1].split("</script>", 1)[0]
+          data = json.loads(payload)
+          comparable = [
+              topic for topic in data["topics"]
+              if len({design["login"] for design in topic["designs"]}) >= 2
+              and any(design["images"] for design in topic["designs"])
+          ]
+          if not comparable:
+              raise SystemExit("No study topics have two authors and at least one submitted image.")
+          failures = []
+          for topic in comparable:
+              result = topic["comparison"]["all"]
+              if result and result["imageNumbers"] and (result["common"] or result["differences"]):
+                  print(f'{topic["id"]}: AI compared {len(result["numbers"])} PRs with images from {len(result["imageNumbers"])} PRs')
+              else:
+                  failures.append(topic["id"])
+          if failures:
+              raise SystemExit("AI image comparison missing for: " + ", ".join(failures))
+          PY

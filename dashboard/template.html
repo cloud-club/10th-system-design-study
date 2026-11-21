@@ -1,0 +1,860 @@
+<section id="study-dashboard-preview" lang="ko" aria-label="시스템 디자인 스터디 대시보드">
+  <header class="study-bar">
+    <div class="study-brand"><span aria-hidden="true">SD</span>시스템 디자인 스터디</div>
+    <nav aria-label="대시보드 메뉴">
+      <button type="button" data-view="home" aria-current="page">모임 달력</button>
+      <button type="button" data-view="all">전체 주제</button>
+      <button type="button" data-view="book">교재 목차</button>
+    </nav>
+    <a class="study-demo" data-repo-link target="_blank" rel="noopener noreferrer">GitHub PR ↗</a>
+  </header>
+
+  <main class="study-main" id="study-main">
+    <section data-page="home" aria-labelledby="study-home-title">
+      <p class="study-kicker">Cloud Club · 시스템 디자인 스터디</p>
+      <h1 id="study-home-title">주차별 스터디 일정</h1>
+      <p class="study-muted" data-snapshot hidden></p>
+      <div class="study-meeting-layout">
+        <section class="study-calendar" aria-label="월별 모임 달력">
+          <div class="study-heading">
+            <h2 data-calendar-month aria-live="polite"></h2>
+            <div class="study-calendar-controls">
+              <button type="button" class="study-secondary" data-calendar-prev aria-label="이전 달">←</button>
+              <button type="button" class="study-secondary" data-calendar-current>현재 모임</button>
+              <button type="button" class="study-secondary" data-calendar-next aria-label="다음 달">→</button>
+            </div>
+          </div>
+          <div class="study-calendar-grid" aria-label="요일">
+            <span class="study-calendar-weekday">일</span><span class="study-calendar-weekday">월</span>
+            <span class="study-calendar-weekday">화</span><span class="study-calendar-weekday">수</span>
+            <span class="study-calendar-weekday">목</span><span class="study-calendar-weekday">금</span>
+            <span class="study-calendar-weekday">토</span>
+          </div>
+          <div class="study-calendar-grid" data-calendar-days aria-label="모임 날짜"></div>
+        </section>
+        <section class="study-selected-meeting" aria-labelledby="study-meeting-heading">
+          <div class="study-heading"><div><p class="study-kicker">선택한 모임</p><h2 id="study-meeting-heading" data-meeting-title aria-live="polite"></h2></div>
+            <span class="study-meeting-date" data-selected-date></span>
+          </div>
+          <div class="study-agenda">
+            <section aria-labelledby="study-sharing-title">
+              <h2 id="study-sharing-title">설계 공유</h2>
+              <p class="study-muted">이전 모임에서 발표한 주제의 PR을 비교합니다.</p>
+              <div data-sharing></div>
+            </section>
+            <section aria-labelledby="study-next-title">
+              <h2 id="study-next-title" data-agenda-next-title>새 주제 발표</h2>
+              <p class="study-muted" data-agenda-next-description>이번 모임의 발표를 듣고, 다음 모임까지 설계합니다.</p>
+              <ul class="study-list" data-next></ul>
+            </section>
+          </div>
+        </section>
+      </div>
+      <section class="study-next" aria-labelledby="study-roadmap-title">
+        <h2 id="study-roadmap-title">주차별 진행 순서</h2>
+        <p class="study-muted">주차를 선택해 해당 모임으로 이동할 수 있어요.</p>
+        <div class="study-roadmap" data-roadmap></div>
+      </section>
+    </section>
+
+    <section data-page="all" aria-labelledby="study-all-title" hidden>
+      <p class="study-kicker">스터디 커리큘럼</p>
+      <h1 id="study-all-title">전체 주제</h1>
+      <div class="study-curriculum" data-all-topics></div>
+      <section class="study-block" aria-labelledby="study-unassigned-title" data-unassigned hidden>
+        <h2 id="study-unassigned-title">주제 확인이 필요한 제출물</h2>
+        <ul data-unassigned-list></ul>
+      </section>
+    </section>
+
+    <section data-page="book" aria-labelledby="study-book-title" hidden>
+      <p class="study-kicker">공통 요구사항 참고</p>
+      <h1 id="study-book-title">교재 목차</h1>
+      <p class="study-book-intro">『가상 면접 사례로 배우는 대규모 시스템 설계 기초 2』</p>
+      <p class="study-muted">장 제목을 누르면 교재 기준의 배경과 요구사항을 볼 수 있습니다. 쪽수는 인쇄본 기준입니다.</p>
+      <ol class="study-book-list" aria-label="교재 1~13장">
+        <li><span>1장</span><strong><button type="button" class="study-book-chapter" data-chapter="1" aria-controls="study-chapter-detail">근접성 서비스</button></strong><span>1쪽 · 설계 범위 2쪽</span></li>
+        <li><span>2장</span><strong><button type="button" class="study-book-chapter" data-chapter="2" aria-controls="study-chapter-detail">주변 친구</button></strong><span>41쪽 · 설계 범위 42쪽</span></li>
+        <li><span>3장</span><strong><button type="button" class="study-book-chapter" data-chapter="3" aria-controls="study-chapter-detail">구글 맵</button></strong><span>73쪽 · 설계 범위 73쪽</span></li>
+        <li><span>4장</span><strong><button type="button" class="study-book-chapter" data-chapter="4" aria-controls="study-chapter-detail">분산 메시지 큐</button> <small>3주차 발표</small></strong><span>113쪽 · 설계 범위 114쪽</span></li>
+        <li class="study-book-current"><span>5장</span><strong><button type="button" class="study-book-chapter" data-chapter="5" aria-controls="study-chapter-detail">지표 모니터링 및 경보 시스템</button> <small>2주차 발표</small></strong><span>159쪽 · 설계 범위 159쪽</span><button type="button" class="study-secondary" data-view="topic" data-topic="week02-monitoring">설계 비교 열기 →</button></li>
+        <li><span>6장</span><strong><button type="button" class="study-book-chapter" data-chapter="6" aria-controls="study-chapter-detail">광고 클릭 이벤트 집계</button> <small>6주차 발표</small></strong><span>191쪽 · 설계 범위 192쪽</span></li>
+        <li><span>7장</span><strong><button type="button" class="study-book-chapter" data-chapter="7" aria-controls="study-chapter-detail">호텔 예약 시스템</button> <small>3주차 참고</small></strong><span>231쪽 · 설계 범위 231쪽</span></li>
+        <li><span>8장</span><strong><button type="button" class="study-book-chapter" data-chapter="8" aria-controls="study-chapter-detail">분산 이메일 서비스</button> <small>3주차 참고</small></strong><span>265쪽 · 설계 범위 265쪽</span></li>
+        <li><span>9장</span><strong><button type="button" class="study-book-chapter" data-chapter="9" aria-controls="study-chapter-detail">S3와 유사한 객체 저장소</button></strong><span>297쪽 · 설계 범위 301쪽</span></li>
+        <li><span>10장</span><strong><button type="button" class="study-book-chapter" data-chapter="10" aria-controls="study-chapter-detail">실시간 게임 순위표</button> <small>6주차 발표</small></strong><span>341쪽 · 설계 범위 342쪽</span></li>
+        <li><span>11장</span><strong><button type="button" class="study-book-chapter" data-chapter="11" aria-controls="study-chapter-detail">결제 시스템</button> <small>4주차 발표</small></strong><span>371쪽 · 설계 범위 371쪽</span></li>
+        <li><span>12장</span><strong><button type="button" class="study-book-chapter" data-chapter="12" aria-controls="study-chapter-detail">전자 지갑</button> <small>4주차 발표</small></strong><span>403쪽 · 설계 범위 404쪽</span></li>
+        <li><span>13장</span><strong><button type="button" class="study-book-chapter" data-chapter="13" aria-controls="study-chapter-detail">증권 거래소</button> <small>7주차 발표</small></strong><span>445쪽 · 설계 범위 446쪽</span></li>
+      </ol>
+    </section>
+
+    <section id="study-chapter-detail" data-page="chapter" aria-labelledby="study-chapter-title" hidden>
+      <button type="button" class="study-back" data-chapter-back>← 교재 목차</button>
+      <p class="study-kicker" data-chapter-number></p>
+      <h1 id="study-chapter-title" data-chapter-title></h1>
+      <p class="study-muted" data-chapter-source></p>
+      <div class="study-context study-chapter-context">
+        <div>
+          <h2>도메인 배경</h2>
+          <p data-chapter-background></p>
+        </div>
+        <div>
+          <h2>공통 요구사항</h2>
+          <p class="study-muted">교재의 설계 조건</p>
+          <ul class="study-chapter-requirements" data-chapter-requirements></ul>
+        </div>
+      </div>
+    </section>
+
+    <section data-page="topic" aria-labelledby="study-topic-title" hidden>
+      <button type="button" class="study-back" data-back>← 목록으로</button>
+      <p class="study-kicker" data-topic-week></p>
+      <h1 id="study-topic-title" data-topic-title></h1>
+      <p class="study-muted study-topic-presenters" data-topic-presenters></p>
+      <dl class="study-schedule" aria-label="주제 일정" data-topic-schedule></dl>
+      <p class="study-book-reference"><span data-topic-book></span><button type="button" class="study-secondary" data-view="book">교재 목차 보기 →</button></p>
+      <section class="study-block" data-topic-context hidden aria-label="주제 배경과 공통 설계 범위"></section>
+
+      <section class="study-block" aria-labelledby="study-presentation-title">
+        <h2 id="study-presentation-title">발표 자료</h2>
+        <div data-presentations></div>
+      </section>
+      <section class="study-block" aria-labelledby="study-compare-title">
+        <div class="study-heading">
+          <div><h2 id="study-compare-title">작성자별 설계 비교</h2><p class="study-muted" data-design-count aria-live="polite"></p></div>
+          <div class="study-filter" role="group" aria-label="설계 PR 상태">
+            <button type="button" data-filter="open" aria-pressed="true">열린 PR</button>
+            <button type="button" data-filter="all" aria-pressed="false">전체</button>
+          </div>
+        </div>
+        <div class="study-common">
+          <h3>공통으로 고려한 점</h3>
+          <p class="study-muted" data-comparison-coverage hidden></p>
+          <div data-common></div>
+        </div>
+        <h3 class="study-differences">작성자별 설계 선택</h3>
+        <div class="study-compare-wrap" data-comparison></div>
+      </section>
+    </section>
+  </main>
+</section>
+
+<style>
+  #study-dashboard-preview {
+    --page: light-dark(#fff, #192330);
+    --quiet-page: light-dark(#f2f5f8, #202d3a);
+    --ink: light-dark(#17283b, #edf2f7);
+    --muted-ink: light-dark(#526477, #b6c4d2);
+    --line: light-dark(#dbe3ea, #394958);
+    --accent-ink: light-dark(#365674, #accced);
+    --accent-page: light-dark(#eaf0f6, #283f54);
+    --button: light-dark(#365571, #a5c4e1);
+    --button-ink: light-dark(#fff, #17283b);
+    --canvas: light-dark(#f4f6f8, #101924);
+    --gutter: clamp(16px, 4vw, 56px);
+    min-height: 100vh;
+    background: var(--canvas);
+    color: var(--ink);
+    font: 15px/1.6 -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+    word-break: keep-all;
+    overflow-wrap: anywhere;
+  }
+  #study-dashboard-preview * { box-sizing: border-box; }
+  #study-dashboard-preview [hidden] { display: none; }
+  #study-dashboard-preview :is(h1, h2, h3, p, ul) { margin: 0; }
+  #study-dashboard-preview button { font: inherit; color: inherit; }
+  #study-dashboard-preview :is(button, a):focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 3px; }
+  #study-dashboard-preview a { color: var(--accent-ink); text-underline-offset: 3px; }
+  #study-dashboard-preview .study-bar { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 24px; padding: 13px max(var(--gutter), calc((100% - 1280px) / 2)); background: #17283b; color: #f5f8fb; border-bottom: 1px solid #354b61; }
+  #study-dashboard-preview .study-brand { display: flex; align-items: center; gap: 9px; font-weight: 700; }
+  #study-dashboard-preview .study-brand span { display: grid; place-items: center; width: 31px; height: 31px; background: var(--button); color: var(--button-ink); border-radius: 8px; font-size: 11px; letter-spacing: .05em; }
+  #study-dashboard-preview .study-bar nav { display: flex; gap: 4px; }
+  #study-dashboard-preview .study-bar button, #study-dashboard-preview .study-back { border: 0; background: transparent; color: var(--muted-ink); padding: 6px 9px; border-radius: 6px; font-size: 13px; }
+  #study-dashboard-preview .study-bar button[aria-current] { background: var(--accent-page); color: var(--accent-ink); font-weight: 650; }
+  #study-dashboard-preview .study-demo { margin-inline-start: auto; color: var(--muted-ink); font-size: 12px; }
+  #study-dashboard-preview .study-bar :is(button, .study-demo) { color: #c8d5e1; }
+  #study-dashboard-preview .study-bar button[aria-current] { background: #344c64; color: #fff; }
+  #study-dashboard-preview .study-bar :is(button, a):focus-visible { outline-color: #c7d9ea; }
+  #study-dashboard-preview .study-main { width: min(100% - 2 * var(--gutter), 1280px); margin-inline: auto; padding: clamp(30px, 5vw, 64px) 0 56px; }
+  #study-dashboard-preview h1 { font-size: clamp(30px, 4.6vw, 52px); line-height: 1.22; letter-spacing: -.045em; }
+  #study-dashboard-preview h2 { font-size: 19px; line-height: 1.35; letter-spacing: -.02em; }
+  #study-dashboard-preview h3 { font-size: 15px; }
+  #study-dashboard-preview .study-kicker { color: var(--accent-ink); font-size: 12px; font-weight: 700; margin-bottom: 5px; }
+  #study-dashboard-preview .study-muted { color: var(--muted-ink); font-size: 13px; }
+  #study-dashboard-preview .study-calendar { padding: clamp(12px, 2.2vw, 24px); border: 1px solid var(--line); border-radius: 14px; background: var(--page); min-width: 0; }
+  #study-dashboard-preview .study-calendar-controls { display: flex; gap: 6px; }
+  #study-dashboard-preview .study-calendar-controls button { min-height: 34px; }
+  #study-dashboard-preview .study-calendar-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); }
+  #study-dashboard-preview .study-calendar-weekday { padding: 10px 5px; text-align: center; color: var(--muted-ink); font-size: 12px; }
+  #study-dashboard-preview .study-calendar-day {
+    min-height: 76px; padding: 7px; border: 0; border-top: 1px solid var(--line);
+    background: transparent; text-align: start; min-width: 0;
+  }
+  #study-dashboard-preview button.study-calendar-day { cursor: pointer; background: var(--accent-page); border-radius: 8px; }
+  #study-dashboard-preview button.study-calendar-day[aria-pressed="true"] { background: var(--button); color: var(--button-ink); }
+  #study-dashboard-preview .study-calendar-number { display: flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 600; }
+  #study-dashboard-preview .study-calendar-number time { display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; }
+  #study-dashboard-preview [data-today] time { background: var(--ink); color: var(--page); }
+  #study-dashboard-preview .study-calendar-number small { margin: 0; font-size: 10px; }
+  #study-dashboard-preview .study-calendar-week { display: block; margin-top: 4px; color: var(--accent-ink); font-size: 12px; font-weight: 750; }
+  #study-dashboard-preview .study-calendar-summary { display: block; font-size: 11px; line-height: 1.45; color: var(--muted-ink); margin-top: 3px; }
+  #study-dashboard-preview .study-selected-meeting { min-width: 0; padding: clamp(16px, 2.2vw, 24px); border: 1px solid var(--line); border-radius: 14px; background: var(--page); }
+  #study-dashboard-preview .study-meeting-date { font-size: 13px; color: var(--muted-ink); }
+  #study-dashboard-preview .study-agenda { display: grid; gap: 20px; margin-top: 16px; }
+  #study-dashboard-preview .study-agenda > section { border-top: 1px solid var(--line); padding-top: 16px; min-width: 0; }
+  #study-dashboard-preview .study-agenda h2 { margin-bottom: 5px; }
+  #study-dashboard-preview .study-agenda .study-feature { padding: 13px; background: var(--quiet-page); }
+  #study-dashboard-preview .study-agenda .study-feature h3 { font-size: 18px; }
+  #study-dashboard-preview .study-agenda .study-list li { grid-template-columns: minmax(0, 1fr) auto; }
+  #study-dashboard-preview .study-agenda .study-list li > span { grid-column: 1 / -1; }
+  #study-dashboard-preview .study-roadmap { display: grid; gap: 7px; margin-top: 12px; }
+  #study-dashboard-preview .study-week-link { display: grid; grid-template-columns: 58px 70px minmax(0, 1fr); align-items: baseline; gap: 12px; width: 100%; padding: 11px 13px; border: 1px solid var(--line); border-radius: 9px; background: var(--page); text-align: start; cursor: pointer; }
+  #study-dashboard-preview .study-week-link[aria-pressed="true"] { border-color: var(--button); background: var(--accent-page); }
+  #study-dashboard-preview .study-week-link strong { font-size: 13px; }
+  #study-dashboard-preview .study-week-link time { font-size: 12px; color: var(--muted-ink); }
+  #study-dashboard-preview .study-week-topics { font-size: 13px; }
+  #study-dashboard-preview .study-presenters { display: block; margin-top: 3px; color: var(--accent-ink); font-size: 12px; font-weight: 500; }
+  #study-dashboard-preview .study-topic-presenters { margin-top: 8px; }
+  #study-dashboard-preview .study-calendar-presenters { display: block; margin-top: 4px; font-size: 10px; color: var(--accent-ink); }
+  #study-dashboard-preview .study-feature { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; margin-top: 9px; padding: 19px 21px; border: 1px solid var(--line); border-radius: 13px; background: var(--accent-page); }
+  #study-dashboard-preview .study-feature h3 { font-size: 23px; line-height: 1.35; letter-spacing: -.02em; margin-bottom: 3px; }
+  #study-dashboard-preview .study-schedule { display: flex; flex-wrap: wrap; gap: 7px 20px; margin: 12px 0 0; font-size: 13px; }
+  #study-dashboard-preview .study-schedule > div { display: flex; flex-wrap: wrap; gap: 2px 7px; }
+  #study-dashboard-preview .study-schedule dt { color: var(--muted-ink); }
+  #study-dashboard-preview .study-schedule dd { margin: 0; font-weight: 650; }
+  #study-dashboard-preview .study-book-intro { margin: 8px 0 3px; font-weight: 650; }
+  #study-dashboard-preview .study-book-list { list-style: none; padding: 0; margin: 15px 0 0; }
+  #study-dashboard-preview .study-book-list li { display: grid; grid-template-columns: 3.4em minmax(0, 1fr) auto; align-items: baseline; gap: 4px 12px; padding: 9px 10px; border-bottom: 1px solid var(--line); }
+  #study-dashboard-preview .study-book-list li > span { font-size: 13px; color: var(--muted-ink); }
+  #study-dashboard-preview .study-book-list li small { color: var(--accent-ink); }
+  #study-dashboard-preview .study-book-chapter { background: transparent; border: 0; padding: 2px 0; text-align: start; font-weight: 650; color: var(--accent-ink); text-decoration: underline; text-underline-offset: 3px; }
+  #study-dashboard-preview .study-chapter-context { margin-top: 16px; }
+  #study-dashboard-preview .study-chapter-context h2 { font-size: 17px; }
+  #study-dashboard-preview .study-chapter-requirements { padding-inline-start: 19px; margin-top: 7px; font-size: 14px; }
+  #study-dashboard-preview .study-chapter-requirements li + li { margin-top: 5px; }
+  #study-dashboard-preview .study-book-current { background: var(--accent-page); border-radius: 7px; }
+  #study-dashboard-preview .study-book-current button { grid-column: 2; justify-self: start; }
+  #study-dashboard-preview .study-book-reference { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin-top: 12px; color: var(--muted-ink); font-size: 13px; }
+  #study-dashboard-preview .study-meta { display: flex; flex-wrap: wrap; gap: 5px 8px; margin-top: 10px; }
+  #study-dashboard-preview .study-meta span { border-radius: 5px; padding: 2px 8px; font-size: 12px; background: var(--page); color: var(--muted-ink); }
+  #study-dashboard-preview .study-primary { display: inline-flex; gap: 10px; align-items: center; border: 0; border-radius: 8px; background: var(--button); color: var(--button-ink); font-size: 14px; font-weight: 700; padding: 8px 13px; }
+  #study-dashboard-preview .study-next, #study-dashboard-preview .study-block { margin-top: 21px; }
+  #study-dashboard-preview .study-list { list-style: none; padding: 0; margin-top: 8px; }
+  #study-dashboard-preview .study-curriculum { margin-top: 16px; }
+  #study-dashboard-preview .study-topic-group { margin-top: 16px; padding: clamp(14px, 2.3vw, 24px); border: 1px solid var(--line); border-radius: 14px; background: var(--page); }
+  #study-dashboard-preview .study-topic-group .study-list li { grid-template-columns: minmax(0, 1fr) auto; }
+  #study-dashboard-preview .study-topic-group .study-list li:last-child { border-bottom: 0; }
+  #study-dashboard-preview .study-list li { display: grid; grid-template-columns: 3.4em minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 10px 1px; border-bottom: 1px solid var(--line); }
+  #study-dashboard-preview .study-list li span { color: var(--muted-ink); font-size: 13px; }
+  #study-dashboard-preview .study-list li strong { font-weight: 650; }
+  #study-dashboard-preview .study-secondary { border: 1px solid var(--line); border-radius: 7px; padding: 5px 9px; background: var(--page); color: var(--accent-ink); font-size: 13px; }
+  #study-dashboard-preview .study-back { margin: 0 0 8px -7px; color: var(--accent-ink); }
+  #study-dashboard-preview .study-heading { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 7px 13px; margin-bottom: 9px; }
+  #study-dashboard-preview .study-heading a { font-size: 13px; }
+  #study-dashboard-preview .study-context { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border: 1px solid var(--line); border-radius: 10px; }
+  #study-dashboard-preview .study-context > div { padding: 11px 13px; min-width: 0; }
+  #study-dashboard-preview .study-context > div:nth-child(2) { border-inline-start: 1px solid var(--line); }
+  #study-dashboard-preview .study-context .study-flow { grid-column: 1 / -1; border-top: 1px solid var(--line); }
+  #study-dashboard-preview .study-context p, #study-dashboard-preview .study-common p { font-size: 14px; margin-top: 3px; color: var(--muted-ink); }
+  #study-dashboard-preview small { color: var(--muted-ink); font-size: 12px; font-weight: 500; margin-inline-start: 4px; }
+  #study-dashboard-preview .study-filter { display: flex; gap: 2px; border-radius: 8px; background: var(--quiet-page); padding: 3px; }
+  #study-dashboard-preview .study-filter button { padding: 4px 8px; border: 0; border-radius: 6px; background: transparent; font-size: 13px; }
+  #study-dashboard-preview .study-filter button[aria-pressed="true"] { background: var(--button); color: var(--button-ink); }
+  #study-dashboard-preview .study-common { padding: 9px 13px; background: var(--quiet-page); border-radius: 8px; }
+  #study-dashboard-preview .study-differences { margin: 13px 0 6px; }
+  #study-dashboard-preview .study-presentation { margin-top: 10px; }
+  #study-dashboard-preview .study-evidence { margin: 6px 0 0; padding-inline-start: 19px; font-size: 14px; }
+  #study-dashboard-preview .study-evidence li + li { margin-top: 5px; }
+  #study-dashboard-preview .study-compare-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 14px; background: var(--page); }
+  #study-dashboard-preview .study-compare-wrap table[data-many] { min-width: 760px; }
+  #study-dashboard-preview .study-compare-wrap td { white-space: pre-wrap; }
+  #study-dashboard-preview table { border-collapse: collapse; table-layout: fixed; width: 100%; font-size: 14px; }
+  #study-dashboard-preview th, #study-dashboard-preview td { border-bottom: 1px solid var(--line); vertical-align: top; text-align: start; padding: 14px 16px; }
+  #study-dashboard-preview thead { background: var(--quiet-page); }
+  #study-dashboard-preview thead th:first-child { width: 18%; }
+  #study-dashboard-preview tbody th { color: var(--muted-ink); font-size: 13px; }
+  #study-dashboard-preview .study-choice > * { background: var(--accent-page); }
+  #study-dashboard-preview .study-author { display: block; font-size: 16px; }
+  #study-dashboard-preview .study-author-meta { color: var(--muted-ink); display: block; font-size: 12px; font-weight: 500; }
+  #study-dashboard-preview .study-diagrams { display: grid; gap: 8px; white-space: normal; }
+  #study-dashboard-preview .study-diagram { display: grid; gap: 4px; font-size: 12px; }
+  #study-dashboard-preview .study-diagram img {
+    display: block; width: 100%; height: clamp(96px, 16vw, 180px); object-fit: contain;
+    border: 1px solid var(--line); border-radius: 8px; background: #fff;
+  }
+  #study-dashboard-preview .study-diagram img[hidden] { display: none; }
+  #study-dashboard-preview .study-diagram-missing { font-size: 13px; font-weight: 650; }
+  #study-dashboard-preview .study-comparison-points { margin: 6px 0 0; padding-inline-start: 19px; font-size: 14px; }
+  #study-dashboard-preview .study-comparison-points li + li { margin-top: 5px; }
+  #study-dashboard-preview .study-design-source { display: inline-block; margin-inline-start: 5px; font-size: 12px; }
+  #study-dashboard-preview .study-meeting-layout {
+    display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; margin-top: 28px;
+  }
+  #study-dashboard-preview [data-snapshot] { margin-top: 10px; }
+  #study-dashboard-preview .study-main h1 { overflow-wrap: break-word; }
+  #study-dashboard-preview .study-calendar-day[aria-pressed="true"] :is(.study-calendar-week, .study-calendar-summary, .study-calendar-presenters) {
+    color: var(--button-ink);
+  }
+  #study-dashboard-preview button:not(:disabled) { cursor: pointer; }
+  #study-dashboard-preview .study-roadmap { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  #study-dashboard-preview .study-topic-group .study-heading { border-bottom: 1px solid var(--line); padding-bottom: 12px; }
+  #study-dashboard-preview .study-common { border-inline-start: 3px solid var(--button); padding: 16px; }
+  #study-dashboard-preview .study-diagram img { height: clamp(130px, 19vw, 250px); }
+  @media (hover: hover) and (prefers-reduced-motion: no-preference) {
+    #study-dashboard-preview :is(.study-primary, .study-secondary, .study-week-link, button.study-calendar-day) {
+      transition: transform 160ms ease, box-shadow 160ms ease;
+    }
+    #study-dashboard-preview :is(.study-primary, .study-secondary, .study-week-link, button.study-calendar-day):hover {
+      transform: translateY(-2px); box-shadow: 0 3px 12px rgb(23 40 59 / 12%);
+    }
+    #study-dashboard-preview :is(.study-primary, .study-secondary, .study-week-link, button.study-calendar-day):active {
+      transform: translateY(0);
+    }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    #study-dashboard-preview .study-meeting-layout { animation: study-enter 240ms ease-out both; }
+    @keyframes study-enter { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+  }
+  @media (max-width: 880px) {
+    #study-dashboard-preview .study-roadmap { grid-template-columns: minmax(0, 1fr); }
+  }
+  @media (max-width: 560px) {
+    #study-dashboard-preview .study-calendar { padding: 11px; }
+    #study-dashboard-preview .study-topic-group .study-list li > :last-child { grid-column: auto; justify-self: end; }
+    #study-dashboard-preview .study-calendar-day { min-height: 62px; padding: 5px 2px; }
+    #study-dashboard-preview .study-calendar-number { justify-content: center; }
+    #study-dashboard-preview .study-calendar-number small, #study-dashboard-preview .study-calendar-summary { display: none; }
+    #study-dashboard-preview .study-calendar-presenters { display: none; }
+    #study-dashboard-preview .study-calendar-week { text-align: center; font-size: 10px; }
+    #study-dashboard-preview .study-agenda { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+    #study-dashboard-preview .study-week-link { grid-template-columns: 48px 60px minmax(0, 1fr); gap: 6px; padding: 10px; }
+    #study-dashboard-preview .study-bar { gap: 6px 12px; }
+    #study-dashboard-preview .study-demo { display: none; }
+    #study-dashboard-preview .study-context { grid-template-columns: minmax(0, 1fr); }
+    #study-dashboard-preview .study-context > div:nth-child(2) { border-inline-start: 0; border-top: 1px solid var(--line); }
+    #study-dashboard-preview table, #study-dashboard-preview thead, #study-dashboard-preview tbody { display: block; }
+    #study-dashboard-preview .study-compare-wrap table[data-many] { min-width: 0; }
+    #study-dashboard-preview tr { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    #study-dashboard-preview table[data-count="3"] tr { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    #study-dashboard-preview tr > :first-child { grid-column: 1 / -1; width: auto; background: var(--quiet-page); }
+    #study-dashboard-preview td::before { content: attr(data-author); display: block; color: var(--muted-ink); font-size: 12px; }
+    #study-dashboard-preview .study-list li { grid-template-columns: 3em minmax(0, 1fr); }
+    #study-dashboard-preview .study-list li > :last-child { grid-column: 2; justify-self: start; }
+    #study-dashboard-preview .study-book-list li { grid-template-columns: 2.7em minmax(0, 1fr); }
+    #study-dashboard-preview .study-book-list li > span:last-of-type { grid-column: 2; }
+  }
+  @media (max-width: 400px) {
+    #study-dashboard-preview table[data-count="3"] tr { grid-template-columns: minmax(0, 1fr); }
+  }
+  @media (pointer: coarse) {
+    #study-dashboard-preview button { min-height: 44px; }
+  }
+</style>
+
+<script id="study-dashboard-data" type="application/json">__DASHBOARD_DATA__</script>
+<script>
+(() => {
+  const root = document.getElementById('study-dashboard-preview');
+  const pages = [...root.querySelectorAll('[data-page]')];
+  const nav = [...root.querySelectorAll('nav [data-view]')];
+  const data = JSON.parse(document.getElementById('study-dashboard-data').textContent);
+  let current = 'home';
+  let previousList = 'home';
+  let previousControl;
+  let selectedTopic;
+  let filter = 'open';
+
+  function show(view) {
+    pages.forEach(page => { page.hidden = page.dataset.page !== view; });
+    nav.forEach(button => {
+      if (button.dataset.view === view) button.setAttribute('aria-current', 'page');
+      else if (view === 'chapter' && button.dataset.view === 'book') button.setAttribute('aria-current', 'location');
+      else button.removeAttribute('aria-current');
+    });
+    current = view;
+  }
+
+  root.addEventListener('click', event => {
+    const button = event.target.closest('button[data-view]');
+    if (!button) return;
+    if (button.dataset.view === 'topic') {
+      const topic = data.topics.find(item => item.id === button.dataset.topic);
+      if (!topic) return;
+      previousList = current;
+      previousControl = button;
+      selectedTopic = topic;
+      filter = 'open';
+      renderTopic();
+    }
+    show(button.dataset.view);
+    if (current === 'topic') root.querySelector('[data-back]').focus();
+    if (current === 'book') nav.find(control => control.dataset.view === 'book').focus();
+  });
+  root.querySelector('[data-back]').addEventListener('click', () => {
+    show(previousList);
+    previousControl.focus();
+  });
+
+  const chapters = {
+    1: {
+      pages: '2~3',
+      background: '사용자 위치를 기준으로 주변 사업장을 찾는 서비스입니다. 위치와 검색 반경을 받아 목록을 빠르게 반환하고, 사용자가 선택한 사업장의 상세 정보를 보여줍니다.',
+      requirements: [
+        '현재 위치와 선택한 반경으로 사업장을 검색합니다. 반경은 0.5·1·2·5·20km 중에서 고릅니다.',
+        '사업장 상세 조회와 소유자의 정보 등록·수정·삭제를 지원합니다. 등록·수정 내용은 다음 날까지 검색 결과에 반영합니다.',
+        '위치 정보를 보호하고, 이용자가 몰려도 검색 지연을 낮게 유지하며 서비스를 제공할 수 있어야 합니다.',
+        '규모 추정은 일간 활성 사용자 1억 명과 등록 사업장 2억 곳을 가정합니다.'
+      ]
+    },
+    2: {
+      pages: '42~43',
+      background: '모바일 앱에서 현재 위치를 기준으로 근처에 있는 친구를 보여주는 기능입니다. 이동 중인 친구들의 위치를 받아 거리와 최신 상태를 계속 갱신합니다.',
+      requirements: [
+        '설정 가능한 반경 안의 친구를 찾습니다. 기준값은 직선거리 5마일(약 8km)입니다.',
+        '친구까지의 거리와 마지막 갱신 시각을 표시합니다. 10분 이상 비활성 상태인 친구는 목록에서 제외합니다.',
+        '이동 이력을 보관합니다. 규모 추정에서는 위치 전송 주기 30초, 동시 이용자 1,000만 명을 가정합니다.',
+        '위치 변화를 빠르게 반영하되, 복제본에 변화가 반영되기까지 수 초가 걸리는 결과적 일관성을 허용합니다.'
+      ]
+    },
+    3: {
+      pages: '73~75',
+      background: '스마트폰에서 지도를 표시하고 목적지까지 경로와 예상 도착 시간을 안내합니다. 이동 중 받은 위치 정보와 교통 상황을 경로 계산에 사용합니다.',
+      requirements: [
+        '사용자 위치 갱신, 지도 표시, 경로 안내와 예상 도착 시간 계산을 지원합니다.',
+        '운전·도보·대중교통 등 여러 이동 방법을 지원하고 교통 상황을 예상 도착 시간에 반영합니다.',
+        '일간 활성 사용자 10억 명을 가정합니다. 여러 경유지 설정과 사업장 사진은 이번 범위에서 제외합니다.',
+        '지도와 경로는 부드럽게 갱신하고, 모바일 데이터와 배터리 사용을 줄입니다.'
+      ]
+    },
+    4: {
+      pages: '114~116',
+      background: '생산자가 보낸 데이터를 큐에 저장하고 소비자가 필요할 때 읽어가는 시스템입니다. 교재 사례는 같은 메시지를 다시 읽거나 여러 소비자가 읽을 수 있는 형태까지 다룹니다.',
+      requirements: [
+        '생산자의 발행과 소비자의 수신을 지원합니다. 메시지는 수 KB 수준의 텍스트를 가정합니다.',
+        '메시지를 다시 읽고 생산된 순서대로 소비할 수 있어야 합니다. 데이터는 2주 보관을 가정합니다.',
+        '최소 한 번 전달을 필수로 지원합니다. 최대 한 번과 정확히 한 번은 추가로 설정할 수 있는 목표입니다.',
+        '처리량과 지연 요구에 맞춰 조정하고, 메시지가 급증하면 확장할 수 있어야 합니다. 데이터는 디스크에 기록하고 여러 노드에 복제합니다.'
+      ]
+    },
+    5: {
+      pages: '159~162',
+      background: '대형 서비스의 인프라 상태를 운영 지표로 확인하고 이상 징후를 경보로 알리는 내부 시스템입니다. CPU나 메모리 사용량, 초당 요청 수처럼 시간에 따라 바뀌는 지표를 다룹니다.',
+      requirements: [
+        '서버 풀 1,000개에 풀당 100대, 서버당 운영 지표 100개를 가정합니다. 수집할 지표는 약 1,000만 개입니다.',
+        '지표 데이터는 1년 보관합니다. 최근 7일은 원본을 유지하고, 오래된 데이터는 1분 단위와 1시간 단위로 집계합니다.',
+        '이메일·전화·PagerDuty·HTTP 웹훅으로 경보를 발송합니다.',
+        '수집량 증가에 대응하고 질의 지연을 낮게 유지합니다. 중요 경보가 빠지지 않도록 하고 새 기술을 붙이기 쉬운 구조를 고려합니다.',
+        '로그 수집, 분산 추적, 사업 지표 처리는 범위에서 제외합니다.'
+      ]
+    },
+    6: {
+      pages: '192~193',
+      background: '여러 서버에서 수집한 광고 클릭을 집계해 광고주 과금과 캠페인 성과 보고에 사용합니다. 클릭이 늦게 들어오거나 같은 이벤트가 여러 번 도착해도 결과의 정확성을 유지해야 합니다.',
+      requirements: [
+        '광고별 최근 M분 클릭 수를 집계하고, 매분 가장 많이 클릭된 광고를 기본 100개까지 보여줍니다.',
+        '순위의 집계 구간과 결과 개수를 조정할 수 있게 하고, 국가·IP·사용자 ID 등으로 집계 결과를 필터링합니다.',
+        '하루 클릭 10억 건을 가정합니다. 지연 도착과 중복을 처리하고 일부 구성요소에 장애가 나도 복구할 수 있어야 합니다.',
+        '집계의 전체 처리 지연은 수 분 이내를 목표로 합니다.'
+      ]
+    },
+    7: {
+      pages: '231~233',
+      background: '호텔 체인의 웹사이트와 앱에서 날짜별 객실 재고를 확인하고 예약하는 시스템입니다. 인기 객실에 예약이 몰려도 판매할 수 있는 수량을 일관되게 관리해야 합니다.',
+      requirements: [
+        '호텔과 객실 정보를 조회하고 예약·취소를 지원합니다. 예약 시 전액 결제하며 객실 검색은 설계 범위에서 제외합니다.',
+        '관리자가 호텔과 객실 정보를 등록·수정·삭제할 수 있어야 합니다.',
+        '호텔 5,000곳과 객실 100만 개를 가정합니다. 취소를 감안해 10% 초과 예약을 허용합니다.',
+        '남은 객실 수에 따라 날짜별 가격이 달라질 수 있으며, 성수기의 동시 예약을 감당해야 합니다.'
+      ]
+    },
+    8: {
+      pages: '265~266',
+      background: '대규모 사용자에게 이메일 송수신과 개인 메일함을 제공하는 서비스입니다. 사용자가 저장한 메일을 검색할 수 있어야 하고, 일부 서버가 중단돼도 메일을 보존해야 합니다.',
+      requirements: [
+        '메일 발송·수신, 메일함 조회, 읽음 상태 필터와 첨부 파일을 지원합니다.',
+        '제목·발신자·본문 검색과 스팸·바이러스 차단을 지원합니다.',
+        '사용자 10억 명을 가정합니다. 이 사례의 접속 방식은 HTTP이며, 사용자 인증 설계는 범위에서 제외합니다.',
+        '이메일과 사용자 데이터를 여러 노드에 복제해 데이터 유실과 부분 장애에 대비합니다.'
+      ]
+    },
+    9: {
+      pages: '301~302',
+      background: '버킷 안에 객체를 저장하고 API로 읽는 대규모 저장 서비스입니다. 작은 객체가 많이 쌓이는 경우와 여러 GB에 이르는 큰 객체를 효율적으로 저장하는 경우를 함께 다룹니다.',
+      requirements: [
+        '버킷 생성, 객체 업로드·다운로드, 객체 버전 관리, 버킷 내 객체 목록 조회를 지원합니다.',
+        '연간 추가 데이터 100PB를 가정하고, 수 KB부터 수 GB 이상까지 다양한 크기의 객체를 처리합니다.',
+        '데이터 내구성 99.9999%와 서비스 가용성 99.99%를 목표로 합니다.',
+        '내구성과 성능을 확보하면서 저장소 비용을 낮춥니다.'
+      ]
+    },
+    10: {
+      pages: '342~343',
+      background: '월간 게임 토너먼트의 승리 점수로 모든 참가자의 순위를 매깁니다. 새 결과가 들어오면 전체 상위권과 개별 플레이어의 순위를 신속하게 보여줍니다.',
+      requirements: [
+        '경기에서 이길 때마다 1점을 더하고, 새 월간 토너먼트가 시작되면 순위표를 새로 만듭니다.',
+        '상위 10명과 특정 플레이어의 순위를 조회합니다. 점수가 같으면 같은 순위를 부여합니다.',
+        '점수는 실시간 또는 그에 가까운 속도로 반영합니다. 특정 플레이어의 위아래 4순위 조회는 확장 과제입니다.',
+        '일간 활성 사용자 500만 명, 월간 활성 사용자 2,500만 명, 플레이어당 하루 평균 10경기를 가정합니다.'
+      ]
+    },
+    11: {
+      pages: '371~373',
+      background: '전자상거래 주문에서 고객의 결제를 받아 판매자에게 정산하는 백엔드입니다. 내부 회계와 외부 결제 서비스가 서로 다른 상태를 기록할 수 있어 거래 내역을 대조해야 합니다.',
+      requirements: [
+        '고객으로부터 대금을 수신하고 판매자에게 판매 대금을 송금하는 흐름을 지원합니다.',
+        '하루 100만 건을 가정합니다. 한 가지 통화의 신용카드 결제를 외부 결제 서비스로 처리하고 카드 번호는 직접 저장하지 않습니다.',
+        '결제 실패와 연동 장애를 처리하고, 내부 결제·회계 기록과 외부 기록을 비동기로 대조해 불일치를 바로잡습니다.'
+      ]
+    },
+    12: {
+      pages: '404~405',
+      background: '두 전자 지갑 사이에서 자금을 옮기는 백엔드입니다. 한 계좌의 인출과 다른 계좌의 입금을 한 거래로 처리하고, 거래 기록으로 과거 잔액을 재구성할 수 있어야 합니다.',
+      requirements: [
+        '지갑 간 이체를 지원하고 환전은 범위에서 제외합니다.',
+        '초당 100만 건의 이체 트랜잭션과 99.99% 가용성을 설계 목표로 둡니다.',
+        '이체에는 트랜잭션 보장을 적용하고, 거래 데이터를 재생해 과거 잔액을 재현할 수 있어야 합니다.'
+      ]
+    },
+    13: {
+      pages: '446~448',
+      background: '거래 시간 동안 매수·매도 주문을 접수해 맞는 주문을 체결하는 주식 거래소입니다. 참가자는 호가와 체결 결과를 실시간으로 확인합니다.',
+      requirements: [
+        '정규 거래 시간의 주식 지정가 주문을 접수하고, 미체결 주문은 취소할 수 있게 합니다.',
+        '호가창과 체결 알림을 실시간으로 갱신합니다. 주문 전 위험 한도와 가용 자금을 확인하고 미체결 주문에 묶인 자금은 다른 주문에 쓰지 못하게 합니다.',
+        '동시 거래 사용자 수만 명과 종목 100개 이상을 지원합니다. 규모 추정에서는 하루 주문 10억 건을 사용합니다.',
+        '최소 99.99% 가용성, 빠른 장애 복구, 밀리초 수준의 주문 왕복 지연을 목표로 하며 특히 p99 지연을 살핍니다.'
+      ]
+    }
+  };
+  const chapterBack = root.querySelector('[data-chapter-back]');
+  let selectedChapterButton;
+
+  root.querySelectorAll('[data-chapter]').forEach(button => button.addEventListener('click', () => {
+    const number = button.dataset.chapter;
+    const chapter = chapters[number];
+    root.querySelector('[data-chapter-number]').textContent = '교재 ' + number + '장';
+    root.querySelector('[data-chapter-title]').textContent = button.textContent;
+    root.querySelector('[data-chapter-source]').textContent = '인쇄본 ' + chapter.pages + '쪽 · 문제 이해 및 설계 범위';
+    root.querySelector('[data-chapter-background]').textContent = chapter.background;
+    const items = chapter.requirements.map(requirement => {
+      const item = document.createElement('li');
+      item.textContent = requirement;
+      return item;
+    });
+    root.querySelector('[data-chapter-requirements]').replaceChildren(...items);
+    selectedChapterButton = button;
+    show('chapter');
+    chapterBack.focus();
+  }));
+  chapterBack.addEventListener('click', () => {
+    show('book');
+    selectedChapterButton.focus();
+  });
+
+  const fields = [
+    ['아키텍처·처리 흐름', 'architecture'],
+    ['기술 선택 근거', 'decision'],
+    ['트레이드오프', 'tradeoff']
+  ];
+  const bookRefs = {
+    'week02-monitoring': '5장 159~162쪽', 'week03-message-queue': '4장 114~116쪽',
+    'week03-reservation-notification': '7장 231~233쪽, 8장 265~266쪽',
+    'week04-payment': '11장 371~373쪽', 'week04-wallet': '12장 404~405쪽',
+    'week06-ad-click': '6장 192~193쪽', 'week06-leaderboard': '10장 342~343쪽',
+    'week07-stock-exchange': '13장 446~448쪽'
+  };
+  const filters = [...root.querySelectorAll('[data-filter]')];
+  const comparison = root.querySelector('[data-comparison]');
+  const weekdays = ['일', '월', '화', '수', '목', '금', '토'];
+  const firstTopic = [...data.topics].sort((a, b) => a.week - b.week)[0];
+  const firstMeeting = new Date(firstTopic.presentationDate + 'T00:00:00Z');
+  firstMeeting.setUTCDate(firstMeeting.getUTCDate() - (firstTopic.week - 1) * 7);
+  const startWeek = data.startWeek || 2;
+  const meetings = Array.from({length: 9 - startWeek}, (_, index) => {
+    const date = new Date(firstMeeting);
+    date.setUTCDate(date.getUTCDate() + (index + startWeek - 1) * 7);
+    return {week: index + startWeek, date: date.toISOString().slice(0, 10)};
+  });
+  const initialWeek = Math.max(startWeek, Math.min(8,
+    data.initialMeetingWeek || (data.reviewWeek ? data.reviewWeek + 1 : data.meetingWeek)));
+  let selectedWeek = initialWeek;
+  let calendarMonth = meetings.find(meeting => meeting.week === selectedWeek).date.slice(0, 7);
+  const calendarDays = root.querySelector('[data-calendar-days]');
+  const today = data.today || new Intl.DateTimeFormat('en-CA', {timeZone: 'Asia/Seoul'}).format(new Date());
+
+  root.querySelector('[data-calendar-prev]').addEventListener('click', () => moveMonth(-1));
+  root.querySelector('[data-calendar-next]').addEventListener('click', () => moveMonth(1));
+  root.querySelector('[data-calendar-current]').addEventListener('click', () => selectWeek(initialWeek));
+  root.addEventListener('click', event => {
+    const button = event.target.closest('button[data-week]');
+    if (button) selectWeek(Number(button.dataset.week));
+  });
+
+  comparison.addEventListener('error', event => {
+    const image = event.target;
+    if (!image.matches('[data-diagram-image]')) return;
+    image.hidden = true;
+    image.nextElementSibling.textContent = '이미지를 불러오지 못함 · 원본 열기 ↗';
+  }, true);
+
+  function escapeHtml(value) {
+    return String(value).replace(/[&<>"']/g, char =>
+      ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'})[char]);
+  }
+
+  function day(iso) {
+    const value = new Date(iso + 'T00:00:00Z');
+    return (value.getUTCMonth() + 1) + '/' + value.getUTCDate() + ' (' + weekdays[value.getUTCDay()] + ')';
+  }
+
+  function opened(topic) {
+    return topic.designs.filter(design => design.state !== 'merged').length;
+  }
+
+  function presenterNames(topics) {
+    return [...new Set(topics.flatMap(topic => topic.presenters || []))].join(' · ');
+  }
+
+  function presenterText(topic) {
+    const names = presenterNames([topic]);
+    return names ? (topic.presenterScope === 'week' ? '주차 발표자 ' : '발표자 ') + names : '발표자 추후 안내';
+  }
+
+  function topicButton(topic, primary, label) {
+    return '<button type="button" class="' + (primary ? 'study-primary' : 'study-secondary') +
+      '" data-view="topic" data-topic="' + escapeHtml(topic.id) + '">' + label + ' →</button>';
+  }
+
+  function topicRow(topic, showWeek = true) {
+    return '<li>' + (showWeek ? '<span>' + topic.week + '주차</span>' : '') + '<strong>' + escapeHtml(topic.title) +
+      '<span class="study-presenters">' + escapeHtml(presenterText(topic)) + '</span>' +
+      '<small class="study-author-meta">발표 자료 ' + topic.presentations.length + '건 · 설계 PR ' +
+      topic.designs.length + '건</small></strong>' + topicButton(topic, false, '주제 보기') + '</li>';
+  }
+
+  function selectWeek(week) {
+    selectedWeek = week;
+    calendarMonth = meetings.find(meeting => meeting.week === week).date.slice(0, 7);
+    renderCalendar();
+    renderAgenda();
+  }
+
+  function moveMonth(change) {
+    const date = new Date(calendarMonth + '-01T00:00:00Z');
+    date.setUTCMonth(date.getUTCMonth() + change);
+    calendarMonth = date.toISOString().slice(0, 7);
+    renderCalendar();
+  }
+
+  function renderCalendar() {
+    const first = new Date(calendarMonth + '-01T00:00:00Z');
+    const last = new Date(first);
+    last.setUTCMonth(last.getUTCMonth() + 1);
+    last.setUTCDate(0);
+    root.querySelector('[data-calendar-month]').textContent = first.getUTCFullYear() + '년 ' + (first.getUTCMonth() + 1) + '월';
+    const offset = first.getUTCDay();
+    const cellCount = Math.ceil((offset + last.getUTCDate()) / 7) * 7;
+    calendarDays.innerHTML = Array.from({length: cellCount}, (_, index) => {
+      const number = index - offset + 1;
+      if (number < 1 || number > last.getUTCDate()) return '<span class="study-calendar-day" aria-hidden="true"></span>';
+      const iso = calendarMonth + '-' + String(number).padStart(2, '0');
+      const meeting = meetings.find(item => item.date === iso);
+      const date = '<span class="study-calendar-number"><time datetime="' + iso + '">' + number +
+        '</time>' + (iso === today ? '<small>오늘</small>' : '') + '</span>';
+      const todayAttribute = iso === today ? ' data-today' : '';
+      if (!meeting) return '<div class="study-calendar-day"' + todayAttribute + '>' + date + '</div>';
+      const newTopics = data.topics.filter(topic => topic.week === meeting.week);
+      const names = meeting.week === 8 ? '트래픽 버티기 챌린지' :
+        newTopics.map(topic => topic.title).join(' · ');
+      return '<button type="button" class="study-calendar-day" data-week="' + meeting.week +
+        '" aria-pressed="' + (selectedWeek === meeting.week) + '" aria-label="' +
+        escapeHtml(day(iso) + ' ' + meeting.week + '주차 모임 · ' + names + ' · ' + presenterNames(newTopics)) + '"' + todayAttribute + '>' +
+        date + '<span class="study-calendar-week">' + meeting.week + '주차</span><span class="study-calendar-summary">' +
+        escapeHtml(names || '설계 공유') + '</span><span class="study-calendar-presenters">' +
+        escapeHtml(presenterNames(newTopics)) + '</span></button>';
+    }).join('');
+  }
+
+  function renderAgenda() {
+    const meeting = meetings.find(meeting => meeting.week === selectedWeek);
+    root.querySelector('[data-meeting-title]').textContent = selectedWeek + '주차 모임';
+    root.querySelector('[data-selected-date]').textContent = day(meeting.date);
+    const sharing = data.topics.filter(topic => topic.week === selectedWeek - 1);
+    root.querySelector('[data-sharing]').innerHTML = sharing.map(topic =>
+      '<article class="study-feature"><div><p class="study-kicker">' + topic.week + '주차 발표 · ' +
+      day(topic.presentationDate) + '</p><h3>' + escapeHtml(topic.title) +
+      '</h3><p class="study-presenters">' + escapeHtml(presenterText(topic)) +
+      '</p><p class="study-muted">설계 PR 마감 ' + day(topic.deadline) +
+      ' 20:00</p><div class="study-meta"><span>발표 자료 ' + topic.presentations.length +
+      '건</span><span>열린 설계 PR ' + opened(topic) + '건</span></div></div>' +
+      topicButton(topic, true, '설계 비교 열기') + '</article>'
+    ).join('') || '<p class="study-muted study-next">' +
+      (selectedWeek === startWeek ? '2주차부터 주제 학습을 시작합니다. 이번 발표를 듣고 다음 모임에서 설계를 공유합니다.' : '지난주 설계 공유 주제가 없습니다.') + '</p>';
+    const isOffline = selectedWeek === 8;
+    root.querySelector('[data-agenda-next-title]').textContent = isOffline ? '오프라인 활동' : '새 주제 발표';
+    root.querySelector('[data-agenda-next-description]').textContent = isOffline ?
+      '마지막 모임은 팀별 트래픽 버티기 챌린지로 진행합니다. 장소와 세부 시간은 추후 확정합니다.' :
+      '이번 모임의 발표를 듣고, 다음 모임까지 설계합니다.';
+    const next = data.topics.filter(topic => topic.week === selectedWeek);
+    root.querySelector('[data-next]').innerHTML = isOffline ? '<li><strong>트래픽 버티기 챌린지</strong></li>' :
+      next.map(topic => topicRow(topic)).join('') || '<li>등록된 새 발표 주제가 없습니다.</li>';
+    root.querySelector('[data-roadmap]').innerHTML = meetings.map(item => {
+      const topics = data.topics.filter(topic => topic.week === item.week);
+      const names = item.week === 8 ? '트래픽 버티기 챌린지' :
+        topics.map(topic => topic.title).join(' · ') || '주제 조율';
+      return '<button type="button" class="study-week-link" data-week="' + item.week +
+        '" aria-pressed="' + (item.week === selectedWeek) + '"><strong>' + item.week +
+        '주차</strong><time datetime="' + item.date + '">' + day(item.date) +
+        '</time><span class="study-week-topics">' + escapeHtml(names) +
+        '<span class="study-presenters">' + escapeHtml(presenterNames(topics)) + '</span></span></button>';
+    }).join('');
+  }
+
+  function renderLists() {
+    root.querySelector('[data-repo-link]').href = data.repoUrl + '/pulls';
+    if (data.capturedAt) {
+      const badge = root.querySelector('[data-snapshot]');
+      badge.textContent = '로컬 확인용 · GitHub에서 읽은 PR 스냅샷 (' + data.capturedAt + ')';
+      badge.hidden = false;
+    }
+    renderCalendar();
+    renderAgenda();
+    const weeks = [...new Set(data.topics.map(topic => topic.week))].sort((a, b) => a - b);
+    root.querySelector('[data-all-topics]').innerHTML = weeks.map(week => {
+      const topics = data.topics.filter(topic => topic.week === week);
+      const date = topics[0].presentationDate;
+      return '<section class="study-topic-group" aria-labelledby="study-topics-week-' + week +
+        '"><div class="study-heading"><h2 id="study-topics-week-' + week + '">' + week +
+        '주차</h2><time class="study-muted" datetime="' + escapeHtml(date) + '">' + day(date) +
+        '</time></div><ul class="study-list">' + topics.map(topic => topicRow(topic, false)).join('') +
+        '</ul></section>';
+    }).join('');
+    if (data.unassigned.length) {
+      root.querySelector('[data-unassigned]').hidden = false;
+      root.querySelector('[data-unassigned-list]').innerHTML = data.unassigned.map(item =>
+        '<li><a target="_blank" rel="noopener noreferrer" href="' + escapeHtml(item.url) + '">' +
+        escapeHtml(item.title) + '</a></li>'
+      ).join('');
+    }
+  }
+
+  function evidence(items) {
+    if (!items?.length) return '<p class="study-muted">원본 발표 자료에서 확인할 수 있습니다.</p>';
+    return '<ul class="study-evidence">' + items.map(item =>
+      '<li>' + escapeHtml(item.text) + (item.pages?.length ? ' <small>PDF ' + item.pages.join('·') + '쪽</small>' : '') + '</li>'
+    ).join('') + '</ul>';
+  }
+
+  function renderTopic() {
+    const topic = selectedTopic;
+    root.querySelector('[data-topic-week]').textContent = topic.week + '주차 발표 주제';
+    root.querySelector('[data-topic-title]').textContent = topic.title;
+    root.querySelector('[data-topic-presenters]').textContent = presenterText(topic);
+    root.querySelector('[data-topic-schedule]').innerHTML =
+      [['발표', day(topic.presentationDate)], ['PR 마감', day(topic.deadline) + ' 20:00'],
+       ['설계 공유', day(topic.reviewDate)]].map(([label, value]) =>
+        '<div><dt>' + label + '</dt><dd>' + value + '</dd></div>'
+      ).join('');
+    const book = bookRefs[topic.id];
+    root.querySelector('[data-topic-book]').textContent = book ? '교재 참고 · ' + book : '교재 전체 목차';
+    const context = root.querySelector('[data-topic-context]');
+    context.hidden = !topic.context;
+    context.innerHTML = topic.context ? '<div class="study-context"><div><h2>도메인 배경</h2><p>' +
+      escapeHtml(topic.context.background) + '</p></div><div><h2>공통 설계 범위</h2>' +
+      evidence(topic.context.requirements.map(text => ({text}))) + '</div></div><p class="study-muted">' +
+      escapeHtml(topic.context.note) + '</p>' : '';
+    root.querySelector('[data-presentations]').innerHTML = topic.presentations.map(presentation =>
+      '<article class="study-presentation"><div class="study-heading"><div><h3>' +
+      escapeHtml(presentation.title) + '</h3><p class="study-muted">' + escapeHtml(presentation.status) +
+      '</p></div><a target="_blank" rel="noopener noreferrer" href="' + escapeHtml(presentation.url) +
+      '">원본 ' + escapeHtml(presentation.format || 'PDF') + ' ↗</a></div><div class="study-context"><div><h3>도메인 배경</h3>' +
+      evidence(presentation.background) + '</div><div><h3>공통 요구사항</h3>' +
+      evidence(presentation.requirements) + '</div><div class="study-flow"><h3>발표 자료의 처리 흐름</h3>' +
+      evidence(presentation.flow) + '</div></div></article>'
+    ).join('') || '<p class="study-muted">발표 자료 제출 대기</p>';
+    renderComparison();
+  }
+
+  function renderDiagrams(design) {
+    if (!design.images.length) {
+      return '<span class="study-diagram-missing">설계 이미지 누락</span>';
+    }
+    return '<div class="study-diagrams">' + design.images.map(diagram => {
+      const url = escapeHtml(diagram.url);
+      const alt = escapeHtml(diagram.alt);
+      return '<a class="study-diagram" target="_blank" rel="noopener noreferrer" href="' + url +
+        '" aria-label="' + alt + ' 원본 열기"><img data-diagram-image loading="lazy" src="' + escapeHtml(diagram.preview || diagram.url) +
+        '" alt="' + alt + '"><span>원본 열기 ↗</span></a>';
+    }).join('') + '</div>';
+  }
+
+  function renderSource(design, image) {
+    const diagram = image ? design.images[image - 1] : null;
+    return '<a class="study-design-source" target="_blank" rel="noopener noreferrer" href="' +
+      escapeHtml(diagram?.url || design.url) + '">PR #' + design.number +
+      (diagram ? ' · 이미지 ' + image : ' · 원문') + ' ↗</a>';
+  }
+
+  function renderComparison() {
+    const topic = selectedTopic;
+    const visible = topic.designs.filter(design => filter === 'all' || design.state !== 'merged');
+    const statuses = {open: '머지 전', draft: '초안', merged: '머지 완료'};
+    filters.forEach(button => {
+      const all = button.dataset.filter === 'all';
+      button.textContent = all ? '전체 ' + topic.designs.length : '열린 PR ' + opened(topic);
+      button.setAttribute('aria-pressed', String(button.dataset.filter === filter));
+    });
+    root.querySelector('[data-design-count]').textContent = '설계 PR ' + visible.length + '건';
+    const byNumber = new Map(visible.map(design => [design.number, design]));
+    const ai = topic.comparison?.[filter];
+    const coverage = root.querySelector('[data-comparison-coverage]');
+    coverage.hidden = !ai && visible.length < 2;
+    coverage.textContent = ai ? (ai.method || 'AI 비교') + ' · 설계 PR ' + ai.numbers.length + '/' + visible.length +
+      '건 · 설계 이미지를 확인한 PR ' + ai.imageNumbers.length + '건' :
+      'AI 비교 결과가 아직 없습니다. 아래에서 PR 원문을 확인할 수 있습니다.';
+    const common = root.querySelector('[data-common]');
+    if (ai?.common.length) {
+      common.innerHTML = '<ul class="study-comparison-points">' + ai.common.map(item =>
+        '<li>' + escapeHtml(item.text) + item.evidence.map(ref =>
+          renderSource(byNumber.get(ref.number), ref.image)).join('') + '</li>').join('') + '</ul>';
+    } else {
+      const explicit = topic.common[filter];
+      common.innerHTML = '<p>' + escapeHtml(explicit.length ? explicit.join(' · ') :
+        '여러 작성자의 설계에서 확인된 공통 고려사항이 없습니다.') + '</p>';
+    }
+    if (!visible.length) {
+      comparison.innerHTML = '<p class="study-muted">' +
+        (topic.designs.length ? '현재 열린 설계 PR이 없습니다.' : '설계 PR 제출 대기') + '</p>';
+      return;
+    }
+    const headings = visible.map(design =>
+      '<th scope="col" role="columnheader"><span class="study-author">' + escapeHtml(design.author) +
+      '</span><span class="study-author-meta">' + statuses[design.state] +
+      ' · <a target="_blank" rel="noopener noreferrer" href="' + escapeHtml(design.url) +
+      '">PR #' + design.number + ' ↗</a></span></th>'
+    ).join('');
+    function row(label, renderCell) {
+      return '<tr role="row"><th scope="row" role="rowheader">' + escapeHtml(label) + '</th>' +
+        visible.map(design => '<td role="cell" data-author="' + escapeHtml(design.author) + '">' +
+          renderCell(design) + '</td>').join('') + '</tr>';
+    }
+    const differences = (ai?.differences || []).map(item => row(item.label, design => {
+      const cell = item.cells.find(cell => cell.number === design.number);
+      return cell ? escapeHtml(cell.text) + renderSource(design, cell.image) : '근거 확인 필요';
+    })).join('');
+    const rows = row('설계 이미지 · 필수', renderDiagrams) + differences + fields.map(([label, key]) =>
+      row(label, design => escapeHtml(design[key] || 'PR 원문 확인'))).join('');
+    comparison.innerHTML = '<table role="table" aria-label="작성자별 설계 비교" data-count="' + visible.length + '"' +
+      (visible.length > 3 ? ' data-many' : '') + '><thead role="rowgroup"><tr role="row">' +
+      '<th scope="col" role="columnheader">비교 항목</th>' + headings +
+      '</tr></thead><tbody role="rowgroup">' + rows + '</tbody></table>';
+  }
+
+  filters.forEach(button => button.addEventListener('click', () => {
+    filter = button.dataset.filter;
+    renderComparison();
+  }));
+  renderLists();
+})();
+</script>
