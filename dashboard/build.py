@@ -1,6 +1,7 @@
 """Build the study dashboard from GitHub or a local snapshot."""
 
 import argparse
+from base64 import b64decode
 from collections import Counter
 from datetime import date, datetime, timedelta
 from html import unescape
@@ -174,8 +175,15 @@ def source_reader(snapshot_path):
         if snapshot_path:
             local = file.get("local")
             return (snapshot_path.parent / local).read_bytes() if local else None
-        return github(f"repos/{repo}/contents/{quote(file['filename'])}?ref={quote(ref, safe='')}",
-                      "-H", "Accept: application/vnd.github.raw+json")
+        endpoint = f"repos/{repo}/contents/{quote(file['filename'])}?ref={quote(ref, safe='')}"
+        if file["filename"].lower().endswith(".pdf"):
+            metadata = json.loads(github(endpoint))
+            if metadata["size"] > 20 * 1024 * 1024:
+                return None
+            if metadata["encoding"] != "base64":
+                metadata = json.loads(github(f"repos/{repo}/git/blobs/{metadata['sha']}"))
+            return b64decode(metadata["content"])
+        return github(endpoint, "-H", "Accept: application/vnd.github.raw+json")
     return read
 
 
