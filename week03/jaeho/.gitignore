@@ -1,0 +1,14 @@
+# 비밀값 · 인프라 상태
+.env
+*.env
+infra/secrets.env
+infra/state.json
+
+# 빌드 결과물
+app/fcfs
+
+# 다이어그램 원본 (로컬 절대경로 아이콘 참조, 문서에는 PNG 사용)
+docs/*.html
+
+# OS
+.DS_Store

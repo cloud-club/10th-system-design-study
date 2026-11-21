@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>티켓 오픈</title>
+<style>
+:root{--bg:#f5f7fa;--ink:#16202a;--mute:#7a8591;--line:#e6eaef;--tk:#139fdc;--ok:#14a46c;--bad:#e04848}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Apple SD Gothic Neo",sans-serif}
+header{display:flex;align-items:center;gap:14px;padding:12px 20px;background:#fff;border-bottom:1px solid var(--line)}
+header h1{font-size:15px;margin:0;flex:1}header nav{display:flex;gap:6px}
+header nav a{padding:7px 16px;border-radius:99px;font-size:13.5px;font-weight:700;color:var(--mute);text-decoration:none}header nav a.on{background:var(--ink);color:#fff}
+.wrap{max-width:420px;margin:48px auto;padding:0 16px}
+.card{background:#fff;border:1px solid var(--line);border-radius:20px;padding:32px 28px;text-align:center}
+h2{font-size:22px;margin:0 0 24px}
+.left small{color:var(--mute);font-size:13px}.left b{display:block;font-size:56px;font-weight:800;color:var(--tk);line-height:1.1;font-variant-numeric:tabular-nums}
+.bar{height:8px;background:#eef1f4;border-radius:4px;margin:14px 0 6px;overflow:hidden}.bar i{display:block;height:100%;background:var(--tk);transition:width .4s ease-out}
+.total{font-size:12.5px;color:var(--mute)}
+button{width:100%;margin-top:28px;padding:18px;border:0;border-radius:14px;background:var(--ink);color:#fff;font-size:18px;font-weight:800;cursor:pointer}
+button:disabled{opacity:.35;cursor:default}
+.msg{margin-top:18px;min-height:30px;font-size:18px;font-weight:800}
+.me{margin-top:18px;font-size:12px;color:var(--mute)}
+</style></head><body>
+<header><h1>🎫 티켓팅 POC</h1><nav><a href="/" class="on">참여자</a><a href="/admin">관리자</a></nav></header>
+<div class="wrap"><div class="card">
+ <h2 id="name">선착순 이벤트</h2>
+ <div class="left"><small>남은 티켓</small><b id="stock">-</b></div>
+ <div class="bar"><i id="bar" style="width:100%"></i></div>
+ <div class="total" id="total">&nbsp;</div>
+ <button id="go">참여하기</button>
+ <div class="msg" id="msg"></div>
+ <div class="me" id="me"></div>
+</div></div>
+<script>
+const $=id=>document.getElementById(id),fmt=n=>n==null?'-':Number(n).toLocaleString();
+function tween(el,to){const from=el._v??to;el._v=to;const t0=performance.now();cancelAnimationFrame(el._raf);
+ const step=now=>{const k=Math.min(1,(now-t0)/400);el.textContent=fmt(Math.round(from+(to-from)*(1-Math.pow(1-k,3))));if(k<1)el._raf=requestAnimationFrame(step)};el._raf=requestAnimationFrame(step)}
+const uid=Math.floor(Math.random()*9e8)+1e8;$('me').textContent='내 응모 번호 '+uid;
+async function tick(){try{const s=await(await fetch('/api/stats')).json();
+ $('name').textContent=s.name||'선착순 이벤트';if(s.stock!=null)tween($('stock'),s.stock);$('total').textContent=`전체 ${fmt(s.initial)}장`;
+ $('bar').style.width=(s.initial?s.stock/s.initial*100:0)+'%';}catch(e){}}
+setInterval(tick,500);tick();
+function show(t,c){$('msg').textContent=t;$('msg').style.color=c||'var(--ink)'}
+$('go').onclick=async()=>{$('go').disabled=true;show('접수 중…','var(--mute)');
+ try{const r=await fetch('/api/orders',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId:uid})});const j=await r.json();
+  if(r.status===200){show('아쉽게도 매진되었어요','var(--bad)');return}
+  if(r.status!==202){show('잠시 후 다시 눌러 주세요','var(--bad)');$('go').disabled=false;return}
+  show('대기열에서 처리 중…','var(--mute)');
+  for(let i=0;i<240;i++){await new Promise(z=>setTimeout(z,500));
+   const st=(await(await fetch('/api/orders/'+j.requestId)).json()).status;
+   if(st==='PENDING')continue;
+   if(st==='SUCCESS'){show('🎉 당첨! 티켓이 확보되었어요','var(--ok)');$('go').textContent='예매 완료'}
+   else if(st==='DUPLICATE')show('이미 참여하셨어요','var(--mute)');else show('아쉽게도 매진되었어요','var(--bad)');return}
+  show('처리가 늦어지고 있어요. 잠시 후 확인해 주세요','var(--mute)')}
+ catch(e){show('네트워크 오류, 다시 눌러 주세요','var(--bad)');$('go').disabled=false}};
+</script></body></html>
