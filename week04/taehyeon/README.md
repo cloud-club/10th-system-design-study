@@ -37,41 +37,7 @@
 
 ### 시스템 구성
 
-```mermaid
-flowchart LR
-    Buyer[구매자] --> Edge[CloudFront · WAF · ALB]
-    Seller[판매자] --> Edge
-    Edge --> Gateway[Spring Cloud Gateway]
-    Buyer --> PSP[카드 PSP 외부 결제 페이지]
-    PSP --> Hook[웹훅 전용 ALB 경로]
-    Bank[송금 업체] --> Hook
-    Hook --> Gateway
-    Gateway --> Payment[결제 서비스]
-    Gateway --> Executor[결제 실행자]
-    Gateway --> Payout[정산 서비스]
-    Gateway --> Wallet[지갑 서비스]
-    Payment --> Executor
-    Executor --> PSP
-    Payout --> Ledger[원장 서비스]
-    Payout --> Bank
-    Payment --> PaymentDB[(Payment DB)]
-    Executor --> ExecutionDB[(Execution DB)]
-    Payout --> PayoutDB[(Payout DB)]
-    Ledger --> LedgerDB[(Ledger DB)]
-    Wallet --> WalletDB[(Wallet DB)]
-    ExecutionDB --> Relay[Outbox 릴레이]
-    PayoutDB --> Relay
-    LedgerDB --> Relay
-    Relay --> Kafka[Amazon MSK]
-    Kafka --> Payment
-    Kafka --> Ledger
-    Kafka --> Payout
-    Kafka --> Wallet
-    PSP --> S3[(S3 조정 파일)]
-    Bank --> S3
-    S3 --> Recon[Spring Batch 조정]
-    Recon --> ReadAPI[서비스별 조회 API]
-```
+![결제 시스템 아키텍처](./payment-architecture.png)
 
 서비스는 ECS Fargate에서 실행하고, 쓰기 DB는 서비스별 Aurora PostgreSQL로 둡니다. 실행자·정산·원장은 각자의 DB에서 상태 변경과 Outbox 저장을 한 트랜잭션으로 커밋합니다. 릴레이가 Kafka에 발행하고, 소비자는 처리한 이벤트와 업무 상태를 같은 DB 트랜잭션에 반영합니다.
 
