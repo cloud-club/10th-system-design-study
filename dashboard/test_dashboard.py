@@ -2,6 +2,7 @@ import json
 from datetime import date
 from io import BytesIO
 from pathlib import Path
+from tempfile import TemporaryDirectory
 import unittest
 from unittest.mock import patch
 from urllib.error import URLError
@@ -20,6 +21,36 @@ class DashboardTests(unittest.TestCase):
         pr = {"title": "[week02] 윤서영 - 지표 모니터링 설계 발표 내용"}
         self.assertTrue(build.is_presentation(path, pr))
         self.assertEqual(build.resolve_topic(self.topics, pr, [path]), "week02-monitoring")
+
+    def test_only_merged_html_presentations_open_on_pages(self):
+        payment = "week04/presentation/결제 시스템 설계 - 고태현.html"
+        wallet = "week04/presentation/전자 지갑 설계 - 발표자.html"
+        repo = "club/study"
+        snapshot = {
+            "repo": repo, "branch": "main", "base_files": [payment],
+            "pulls": [{
+                "number": 9, "state": "open", "title": "[Week 04] 전자 지갑 발표",
+                "head": {"repo": {"full_name": repo}, "sha": "preview"},
+                "files": [{"filename": wallet}],
+            }],
+        }
+        raw_html = b"<!doctype html><title>Presentation</title>"
+
+        def read(source_repo, ref, file):
+            self.assertEqual((source_repo, ref, file["filename"]), (repo, "main", payment))
+            return raw_html
+
+        with TemporaryDirectory() as directory:
+            output_dir = Path(directory)
+            data = build.build_model(self.topics, snapshot, read, date(2026, 11, 24),
+                                     presentation_dir=output_dir)
+            topics = {topic["id"]: topic for topic in data["topics"]}
+            published = topics["week04-payment"]["presentations"][0]["url"]
+            self.assertEqual(published, "./" + build.quote(payment))
+            self.assertEqual((output_dir / payment).read_bytes(), raw_html)
+            preview = topics["week04-wallet"]["presentations"][0]["url"]
+            self.assertEqual(preview, f"https://github.com/{repo}/blob/preview/{build.quote(wallet)}")
+            self.assertFalse((output_dir / wallet).exists())
 
     def test_week_alone_does_not_mix_topics(self):
         pr = {"title": "[Week 03] 설계 제출"}
