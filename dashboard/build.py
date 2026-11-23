@@ -236,7 +236,7 @@ def shared_considerations(designs):
     return [labels[key] for key, total in count.items() if total >= 2]
 
 
-def build_model(topics, snapshot, read, today, cache_dir=None):
+def build_model(topics, snapshot, read, today, cache_dir=None, *, presentation_dir=None):
     repo, branch = snapshot["repo"], snapshot["branch"]
     if not re.fullmatch(r"[\w.-]+/[\w.-]+", repo):
         raise ValueError("invalid repository name")
@@ -342,6 +342,17 @@ def build_model(topics, snapshot, read, today, cache_dir=None):
             status, summary = analyze_pdf(data, cache_dir, allow_ai) if data else ("원본 PDF 확인", {})
         else:
             status, summary = "HTML 발표 자료 · 원문 확인", {}
+            # Serve executable HTML only from the base branch, never from an open PR.
+            if (presentation_dir is not None and source_repo == repo and ref == branch
+                    and path in base_files and pr.get("state") != "open"
+                    and ".." not in PurePosixPath(path).parts):
+                data = read_file(read, repo, branch, file)
+                if data:
+                    destination = presentation_dir / path
+                    destination.parent.mkdir(parents=True, exist_ok=True)
+                    destination.write_bytes(data)
+                    url = f"./{quote(path)}"
+                    status = "HTML 발표 자료 · 브라우저에서 열기"
         result[topic_id]["presentations"].append({
             "title": PurePosixPath(path).stem, "url": url, "status": status,
             "format": "PDF" if path.lower().endswith(".pdf") else "HTML", **summary,
@@ -405,7 +416,8 @@ def main():
         snapshot = json.loads(args.snapshot.read_text(encoding="utf-8"))
     else:
         snapshot = read_github(args.repo, args.branch)
-    model = build_model(topics, snapshot, source_reader(args.snapshot), args.date, args.cache_dir)
+    model = build_model(topics, snapshot, source_reader(args.snapshot), args.date, args.cache_dir,
+                        presentation_dir=args.output.parent)
     write_dashboard(args.output, model)
     print(f"Generated {args.output}")
 
