@@ -1,0 +1,2217 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>AI Agent 구독 플랫폼 설계 | Week 5</title>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+  <style>
+    :root {
+      /* Surfaces & Neutral Palette */
+      --canvas: #e7eef6;
+      --paper: #f6f9fd;
+      --white: #ffffff;
+      --surface-muted: #f0f5fa;
+      --surface-subtle: #eaf1f8;
+      --border: #d5e2ee;
+      --border-strong: #bfd3e4;
+
+      /* Ink Hierarchy (WCAG AA+ >= 4.5:1 on both white and paper) */
+      --ink: #0f2238;
+      --ink-2: #334a5e;
+      --ink-3: #51667a;
+
+      /* Semantic Accents (tuned for >= 5.0:1 on white AND tinted surfaces) */
+      --mint: #0e6f60;
+      --mint-ink: #0b5a4e;
+      --mint-bg: #e7f6f2;
+      --mint-bd: #9fd8cb;
+
+      --blue: #1b56c4;
+      --blue-ink: #1646a1;
+      --blue-bg: #edf4ff;
+      --blue-bd: #b6cefa;
+
+      --orange: #b34019;
+      --orange-ink: #993412;
+      --orange-bg: #fff3ec;
+      --orange-bd: #f3c1ab;
+
+      --purple: #5e3bb5;
+      --purple-ink: #4c2d96;
+      --purple-bg: #f4f0ff;
+      --purple-bd: #d2c3f8;
+
+      --amber: #855600;
+      --amber-ink: #6e4700;
+      --amber-bg: #fff8e4;
+      --amber-bd: #edd282;
+
+      /* Type Scale (8 deliberate roles) */
+      --font-sans: "Pretendard Variable", Pretendard, "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", system-ui, -apple-system, sans-serif;
+      --font-mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+      --text-display: 76px;
+      --text-title: 40px;
+      --text-kpi: 32px;
+      --text-card-lg: 22px;
+      --text-card-md: 19px;
+      --text-body: 16px;
+      --text-body-sm: 15px;
+      --text-caption: 13px;
+
+      /* 4px-Base Spacing Scale */
+      --sp-1: 4px;
+      --sp-2: 8px;
+      --sp-3: 12px;
+      --sp-4: 16px;
+      --sp-5: 20px;
+      --sp-6: 24px;
+      --sp-7: 28px;
+      --sp-8: 32px;
+
+      /* Radius Discipline */
+      --radius-card: 14px;
+      --radius-inner: 10px;
+      --radius-chip: 8px;
+
+      /* Neutral Elevation (floating surfaces only) */
+      --shadow-deck: 0 24px 64px rgba(15, 23, 42, .14);
+      --shadow-float: 0 10px 28px rgba(15, 23, 42, .12);
+      --shadow-panel: 0 22px 54px rgba(15, 23, 42, .20);
+    }
+
+    * { box-sizing: border-box; }
+    html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; }
+    body {
+      background: var(--canvas);
+      color: var(--ink);
+      font-family: var(--font-sans);
+      font-size: var(--text-body);
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+      word-break: keep-all;
+    }
+
+    /* Browser surfaces: selection, links, focus, scrollbars */
+    ::selection { background: var(--mint-bg); color: var(--mint-ink); }
+    a {
+      color: inherit;
+      text-decoration: underline;
+      text-decoration-thickness: 1.5px;
+      text-underline-offset: 4px;
+      transition: color .15s ease, opacity .15s ease;
+    }
+    a:hover { opacity: .82; }
+    :focus-visible {
+      outline: 2.5px solid var(--mint);
+      outline-offset: 3px;
+      border-radius: 6px;
+    }
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: var(--surface-muted); border-radius: 99px; }
+    ::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 99px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--ink-3); }
+
+    h1, h2, h3, h4, p { margin: 0; }
+    h1, h2, h3, h4 { text-wrap: balance; word-break: keep-all; }
+
+    /* Deck Frame */
+    #deck {
+      position: absolute;
+      width: 1440px;
+      height: 810px;
+      transform-origin: top left;
+      box-shadow: var(--shadow-deck);
+      background: var(--paper);
+      overflow: hidden;
+    }
+
+    /* Slide Progress Hairline */
+    .deck-progress {
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      width: 100%;
+      height: 3px;
+      background: rgba(15, 34, 56, .06);
+      z-index: 6;
+      pointer-events: none;
+    }
+    .deck-progress-bar {
+      height: 100%;
+      width: 7.14%;
+      background: var(--mint);
+      transition: width .28s cubic-bezier(.16, 1, .3, 1);
+    }
+
+    /* Unified Bright Slide Grid */
+    .slide {
+      display: none;
+      position: absolute;
+      inset: 0;
+      width: 1440px;
+      height: 810px;
+      overflow: hidden;
+      padding: 52px 80px 64px;
+      background: var(--paper);
+      color: var(--ink);
+      flex-direction: column;
+    }
+    .slide.active { display: flex; }
+    .slide::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 96% -4%, rgba(182, 206, 250, .24), transparent 34%),
+        radial-gradient(circle at 4% 104%, rgba(159, 216, 203, .22), transparent 30%);
+      pointer-events: none;
+    }
+
+    .slide-head {
+      position: relative;
+      z-index: 1;
+      flex: 0 0 auto;
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: var(--sp-6);
+      padding-bottom: var(--sp-4);
+      border-bottom: 1px solid rgba(15, 34, 56, .08);
+    }
+    .slide-head-main {
+      display: flex;
+      flex-direction: column;
+      gap: var(--sp-3);
+    }
+    .title-accent {
+      display: block;
+      width: 36px;
+      height: 4px;
+      border-radius: 2px;
+      background: var(--mint);
+    }
+    .heading {
+      font-weight: 800;
+      font-size: var(--text-title);
+      line-height: 1.18;
+      letter-spacing: -0.025em;
+      color: var(--ink);
+    }
+
+    .slide-body {
+      position: relative;
+      z-index: 1;
+      flex: 1 1 auto;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      width: 100%;
+      padding-top: var(--sp-6);
+    }
+
+    .footer {
+      position: absolute;
+      bottom: 20px;
+      right: 80px;
+      z-index: 3;
+      font-variant-numeric: tabular-nums;
+      font-size: 14px;
+      letter-spacing: .08em;
+      font-weight: 700;
+      color: var(--ink-3);
+    }
+    .footer strong { color: var(--mint-ink); font-weight: 800; }
+
+    /* Semantic Text Utilities */
+    .mint { color: var(--mint-ink); }
+    .orange { color: var(--orange-ink); }
+    .blue { color: var(--blue-ink); }
+    .purple { color: var(--purple-ink); }
+    .mono { font-family: var(--font-mono); letter-spacing: -0.01em; }
+    .num { font-variant-numeric: tabular-nums; }
+
+    /* Sentence-level Reading Blocks */
+    .lines {
+      display: flex;
+      flex-direction: column;
+      gap: var(--sp-2);
+    }
+    .lines span {
+      display: block;
+      line-height: 1.56;
+      word-break: keep-all;
+      text-wrap: pretty;
+    }
+    .lines b, .lines strong {
+      color: var(--ink);
+      font-weight: 700;
+    }
+
+    /* Shared Inline Index Badges (replaces side-tabs & eyebrow kickers) */
+    .card-head {
+      display: flex;
+      align-items: center;
+      gap: var(--sp-3);
+      margin-bottom: var(--sp-3);
+    }
+    .idx-pill {
+      flex: 0 0 auto;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 34px;
+      height: 28px;
+      padding: 0 10px;
+      border-radius: var(--radius-chip);
+      font-size: var(--text-caption);
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: .02em;
+      background: var(--mint-bg);
+      color: var(--mint-ink);
+    }
+    .idx-pill.blue { background: var(--blue-bg); color: var(--blue-ink); }
+    .idx-pill.mint { background: var(--mint-bg); color: var(--mint-ink); }
+    .idx-pill.orange { background: var(--orange-bg); color: var(--orange-ink); }
+    .idx-pill.purple { background: var(--purple-bg); color: var(--purple-ink); }
+    .idx-pill.amber { background: var(--amber-bg); color: var(--amber-ink); }
+
+    .icon-chip {
+      flex: 0 0 auto;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--mint-ink);
+    }
+    .icon-chip svg {
+      width: 22px;
+      height: 22px;
+      display: block;
+    }
+    .icon-chip.blue { color: var(--blue-ink); }
+    .icon-chip.mint { color: var(--mint-ink); }
+    .icon-chip.orange { color: var(--orange-ink); }
+    .icon-chip.purple { color: var(--purple-ink); }
+
+    /* Crisp Flow Arrow SVG */
+    .flow-arrow {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--ink-3);
+    }
+    .flow-arrow svg {
+      width: 18px;
+      height: 18px;
+      display: block;
+    }
+
+    /* 01 — Cover */
+    .slide.cover {
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+    }
+    .cover .hero {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      max-width: 960px;
+    }
+    .cover .hero .accent {
+      display: block;
+      width: 64px;
+      height: 5px;
+      background: var(--mint);
+      margin-bottom: var(--sp-7);
+      border-radius: 3px;
+    }
+    .cover .hero h1 {
+      font-size: var(--text-display);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1.2;
+      color: var(--ink);
+    }
+    .cover .hero h1 .mint {
+      color: var(--mint);
+    }
+    .cover .cover-mark {
+      margin-top: 36px;
+      font-size: 19px;
+      color: var(--ink-2);
+      font-weight: 600;
+      letter-spacing: .01em;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* 02 — Domain */
+    .compare-row {
+      width: 100%;
+      display: grid;
+      grid-template-columns: 1fr 1.18fr;
+      gap: var(--sp-6);
+    }
+    .compare-card {
+      padding: var(--sp-7) var(--sp-7);
+      border-radius: var(--radius-card);
+      background: var(--white);
+      border: 1px solid var(--border);
+    }
+    .compare-card.highlight {
+      border-color: var(--mint-bd);
+      background: linear-gradient(145deg, #edf9f6 0%, #f6faff 100%);
+    }
+    .compare-card h3 {
+      font-size: var(--text-card-lg);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--ink);
+      margin-bottom: var(--sp-3);
+    }
+    .compare-card .lines {
+      font-size: var(--text-body);
+      color: var(--ink-2);
+    }
+    .compare-row.compact .compare-card {
+      padding: var(--sp-5) var(--sp-6);
+    }
+    .compare-row.compact .compare-card h3 {
+      font-size: var(--text-card-md);
+      margin-bottom: var(--sp-2);
+    }
+    .compare-row.compact .compare-card .lines {
+      font-size: var(--text-body-sm);
+    }
+
+    .pain-grid {
+      width: 100%;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--sp-5);
+      margin-top: var(--sp-6);
+    }
+    .pain-item {
+      padding: var(--sp-6);
+      background: var(--white);
+      border-radius: var(--radius-card);
+      border: 1px solid var(--border);
+    }
+    .pain-item h4 {
+      font-size: var(--text-card-md);
+      font-weight: 700;
+      letter-spacing: -0.015em;
+      color: var(--ink);
+    }
+    .pain-item .lines {
+      font-size: var(--text-body-sm);
+      color: var(--ink-2);
+    }
+
+    /* 03 — Hierarchy & Lifecycle (Flattened, Zero Triple-Nested Cards) */
+    .hier-cards {
+      width: 100%;
+      display: grid;
+      grid-template-columns: 1fr 24px 1fr 24px 1fr;
+      align-items: stretch;
+      gap: var(--sp-2);
+    }
+    .hier-card {
+      padding: var(--sp-5) var(--sp-6);
+      border-radius: var(--radius-card);
+      background: var(--white);
+      border: 1px solid var(--mint-bd);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .hier-card .card-head {
+      margin-bottom: var(--sp-2);
+    }
+    .hier-card strong {
+      font-size: var(--text-card-md);
+      font-weight: 700;
+      letter-spacing: -0.015em;
+      color: var(--ink);
+    }
+    .hier-card p {
+      font-size: var(--text-body-sm);
+      color: var(--ink-2);
+      line-height: 1.5;
+      text-wrap: pretty;
+    }
+
+    .lifecycle-band {
+      width: 100%;
+      margin-top: var(--sp-8);
+      padding-top: var(--sp-6);
+      border-top: 1px solid var(--border);
+    }
+    .lc-row {
+      display: grid;
+      grid-template-columns: 164px 20px 164px 20px 1fr 20px 168px 20px 168px;
+      align-items: stretch;
+      gap: var(--sp-1);
+    }
+    .lc-node {
+      padding: var(--sp-5) var(--sp-3);
+      border-radius: var(--radius-card);
+      background: var(--white);
+      border: 1px solid var(--border-strong);
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .lc-node b {
+      display: block;
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--ink);
+      line-height: 1.3;
+    }
+    .lc-node small {
+      display: block;
+      margin-top: var(--sp-2);
+      font-size: var(--text-caption);
+      color: var(--ink-2);
+      line-height: 1.42;
+      text-wrap: pretty;
+    }
+    .lc-loop {
+      padding: var(--sp-4) var(--sp-4);
+      border-radius: var(--radius-card);
+      background: var(--mint-bg);
+      border: 1.5px dashed var(--mint);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .lc-loop .loop-head {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--mint-ink);
+      margin-bottom: var(--sp-3);
+      text-align: center;
+    }
+    .lc-loop-items {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--sp-2);
+    }
+    .lc-sub {
+      padding: var(--sp-3) var(--sp-2);
+      border-radius: var(--radius-inner);
+      background: var(--white);
+      border: 1px solid var(--mint-bd);
+      text-align: center;
+    }
+    .lc-sub b {
+      display: block;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--ink);
+    }
+    .lc-sub small {
+      display: block;
+      margin-top: 6px;
+      font-size: var(--text-caption);
+      color: var(--ink-2);
+      line-height: 1.38;
+      text-wrap: pretty;
+    }
+
+    /* 04 — Detailed Functional Requirements */
+    .f-grid {
+      width: 100%;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--sp-5) var(--sp-6);
+    }
+    .f-card {
+      padding: var(--sp-5) var(--sp-6);
+      border-radius: var(--radius-card);
+      background: var(--white);
+      border: 1px solid var(--border);
+      display: flex;
+      gap: var(--sp-4);
+      align-items: flex-start;
+    }
+    .f-card.wide {
+      grid-column: 1 / -1;
+      align-items: center;
+    }
+    .f-card.wide .f-wide-inner {
+      display: grid;
+      grid-template-columns: 300px 1fr;
+      align-items: center;
+      gap: var(--sp-6);
+      width: 100%;
+    }
+    .f-card.wide h3 {
+      margin-bottom: 0;
+    }
+    .f-card.wide .lines {
+      max-width: 68ch;
+    }
+    .f-num {
+      flex: 0 0 44px;
+      height: 36px;
+      border-radius: var(--radius-chip);
+      display: grid;
+      place-items: center;
+      font-size: 15px;
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
+      background: var(--mint-bg);
+      color: var(--mint-ink);
+      margin-top: 2px;
+    }
+    .f-card.wide .f-num { margin-top: 0; }
+    .f-card:nth-child(2) .f-num { background: var(--blue-bg); color: var(--blue-ink); }
+    .f-card:nth-child(3) .f-num { background: var(--orange-bg); color: var(--orange-ink); }
+    .f-card:nth-child(4) .f-num { background: var(--purple-bg); color: var(--purple-ink); }
+    .f-card:nth-child(5) .f-num { background: var(--amber-bg); color: var(--amber-ink); }
+    .f-card h3 {
+      font-size: var(--text-card-md);
+      font-weight: 700;
+      letter-spacing: -0.015em;
+      color: var(--ink);
+      margin-bottom: var(--sp-2);
+    }
+    .f-card .lines {
+      font-size: var(--text-body-sm);
+      color: var(--ink-2);
+      gap: 6px;
+    }
+
+    /* 05 — Detailed Non-Functional Requirements */
+    .n-grid {
+      width: 100%;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--sp-6);
+    }
+    .n-card {
+      padding: var(--sp-6) var(--sp-7);
+      border-radius: var(--radius-card);
+      background: var(--white);
+      border: 1px solid var(--border);
+    }
+    .n-head {
+      display: flex;
+      align-items: center;
+      gap: var(--sp-3);
+      margin-bottom: var(--sp-4);
+    }
+    .n-badge {
+      padding: 4px 11px;
+      border-radius: var(--radius-chip);
+      background: var(--mint-bg);
+      color: var(--mint-ink);
+      font-size: 14px;
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
+    }
+    .n-card:nth-child(2) .n-badge { background: var(--orange-bg); color: var(--orange-ink); }
+    .n-card:nth-child(3) .n-badge { background: var(--blue-bg); color: var(--blue-ink); }
+    .n-card:nth-child(4) .n-badge { background: var(--purple-bg); color: var(--purple-ink); }
+    .n-card h3 {
+      font-size: var(--text-card-lg);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--ink);
+    }
+    .n-card .lines {
+      font-size: var(--text-body);
+      color: var(--ink-2);
+      gap: var(--sp-2);
+    }
+
+    /* 06 — Scale Estimation & Intuition */
+    .scale-steps {
+      width: 100%;
+      display: grid;
+      grid-template-columns: 1fr 18px 1fr 18px 1fr 18px 1fr;
+      align-items: stretch;
+      gap: var(--sp-1);
+    }
+    .scale-card {
+      padding: var(--sp-6) var(--sp-5);
+      border-radius: var(--radius-card);
+      background: var(--white);
+      border: 1px solid var(--border);
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .scale-card.accent {
+      background: var(--mint-bg);
+      border-color: var(--mint-bd);
+    }
+    .scale-card .s-label {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--ink-3);
+      margin-bottom: var(--sp-2);
+    }
+    .scale-card.accent .s-label { color: var(--mint-ink); }
+    .scale-card strong {
+      display: block;
+      font-size: var(--text-kpi);
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
+      color: var(--ink);
+      letter-spacing: -0.025em;
+      line-height: 1.18;
+      margin-bottom: var(--sp-3);
+    }
+    .scale-card.accent strong { color: var(--mint-ink); }
+    .scale-card .lines {
+      font-size: 14.5px;
+      color: var(--ink-2);
+      gap: 4px;
+      font-variant-numeric: tabular-nums;
+    }
+    .intuition-grid {
+      width: 100%;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--sp-6);
+      margin-top: var(--sp-6);
+    }
+    .int-box {
+      padding: var(--sp-6) var(--sp-7);
+      border-radius: var(--radius-card);
+      background: var(--white);
+      border: 1px solid var(--border);
+    }
+    .int-box.warn {
+      background: var(--orange-bg);
+      border-color: var(--orange-bd);
+    }
+    .int-box.info {
+      background: var(--blue-bg);
+      border-color: var(--blue-bd);
+    }
+    .int-box h3 {
+      font-size: var(--text-card-md);
+      font-weight: 700;
+      letter-spacing: -0.015em;
+      color: var(--ink);
+      margin-bottom: var(--sp-3);
+    }
+    .int-box.warn h3 { color: var(--orange-ink); }
+    .int-box.info h3 { color: var(--blue-ink); }
+    .int-box .lines {
+      font-size: var(--text-body);
+      color: var(--ink-2);
+      gap: var(--sp-2);
+    }
+
+    /* 07 — Clean Architecture with Legend & Collision-Free Routing */
+    .slide.arch-slide {
+      padding: 44px 80px 52px;
+    }
+    .slide.arch-slide .slide-head {
+      padding-bottom: var(--sp-3);
+    }
+    .slide.arch-slide .slide-body {
+      padding-top: var(--sp-4);
+    }
+    .arch-legend {
+      display: flex;
+      align-items: center;
+      gap: var(--sp-5);
+      font-size: var(--text-caption);
+      font-weight: 600;
+      color: var(--ink-2);
+      padding-bottom: 4px;
+    }
+    .arch-legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      white-space: nowrap;
+    }
+    .arch-legend-line {
+      width: 24px;
+      height: 0;
+      border-top: 2.2px solid var(--blue);
+    }
+    .arch-legend-line.green { border-color: var(--mint); }
+    .arch-legend-line.purple { border-color: var(--purple); border-top-style: dashed; }
+    .arch-legend-line.orange { border-color: var(--orange); border-top-style: dashed; }
+
+    .arch-canvas {
+      position: relative;
+      width: 1280px;
+      height: 576px;
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius-card);
+      background: var(--white);
+      overflow: hidden;
+    }
+    .arch-canvas svg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+    }
+    .arch-zone {
+      position: absolute;
+      z-index: 0;
+      border-radius: 12px;
+      border: 1.5px dashed;
+    }
+    .arch-zone .zlabel {
+      position: absolute;
+      top: 8px;
+      left: 14px;
+      font-size: 12.5px;
+      font-weight: 800;
+      letter-spacing: .04em;
+    }
+    .abox {
+      position: absolute;
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 8px 10px;
+      border-radius: var(--radius-inner);
+      background: var(--white);
+      border: 1.5px solid #96b4c8;
+      text-align: center;
+    }
+    .abox strong {
+      font-size: 14.5px;
+      font-weight: 700;
+      color: var(--ink);
+      line-height: 1.22;
+    }
+    .abox small {
+      font-size: 12.5px;
+      color: var(--ink-2);
+      margin-top: 4px;
+      line-height: 1.25;
+      font-weight: 500;
+    }
+    .abox.blue { border-color: #6ea5f8; background: #f2f7ff; }
+    .abox.mint { border-color: #36c493; background: #eefbf5; }
+    .abox.warn { border-color: #e2a23b; background: #fffbf0; }
+    .abox.red { border-color: #e87a7a; background: #fff5f5; }
+    .abox.purple { border-color: #a68bf4; background: #f7f4ff; }
+    .abox.slate { border-color: #9db0c2; background: #f8fafc; }
+
+    /* 08 — Hybrid Key & Billing */
+    .vk-banner {
+      width: 100%;
+      padding: var(--sp-4) var(--sp-6);
+      border-radius: var(--radius-card);
+      background: var(--blue-bg);
+      border: 1px solid var(--blue-bd);
+      font-size: 17px;
+      font-weight: 600;
+      color: var(--blue-ink);
+      text-align: center;
+      text-wrap: balance;
+    }
+    .vk-banner strong { font-weight: 800; color: var(--ink); }
+
+    .split-2 {
+      width: 100%;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--sp-6);
+      margin-top: var(--sp-6);
+    }
+    .split-2.flush { margin-top: 0; }
+
+    .light-panel {
+      padding: var(--sp-6) var(--sp-7);
+      border-radius: var(--radius-card);
+      background: var(--white);
+      border: 1px solid var(--border);
+    }
+    .light-panel.mint-b { border-color: var(--mint-bd); }
+    .light-panel.orange-b { border-color: var(--orange-bd); }
+    .light-panel h3 {
+      font-size: var(--text-card-lg);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--ink);
+      margin-bottom: var(--sp-4);
+    }
+    .light-panel .lines {
+      font-size: var(--text-body);
+      color: var(--ink-2);
+      gap: var(--sp-3);
+    }
+
+    .idemp-strip {
+      width: 100%;
+      margin-top: var(--sp-6);
+      padding: var(--sp-4) var(--sp-6);
+      border-radius: var(--radius-card);
+      background: var(--mint-bg);
+      border: 1px solid var(--mint-bd);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--sp-5);
+      font-size: 16.5px;
+      font-weight: 600;
+      color: var(--mint-ink);
+    }
+    .idemp-strip strong { color: var(--ink); font-weight: 800; }
+    .idemp-strip .badge-val {
+      color: var(--mint-ink);
+      background: var(--white);
+      padding: 6px 14px;
+      border-radius: var(--radius-chip);
+      border: 1px solid var(--mint-bd);
+      font-size: 15px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    /* 09 — Limit & Guardrails (Flattened Interior Bands, Zero Nested Bordered Cards) */
+    .step-strip {
+      display: grid;
+      grid-template-columns: 1fr 16px 1fr 16px 1fr;
+      align-items: stretch;
+      gap: var(--sp-1);
+      margin-bottom: var(--sp-5);
+      padding-bottom: var(--sp-5);
+      border-bottom: 1px solid var(--border);
+    }
+    .step-chip {
+      padding: var(--sp-3) var(--sp-2);
+      border-radius: var(--radius-inner);
+      background: var(--surface-muted);
+      text-align: center;
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--ink);
+    }
+    .step-chip small {
+      display: block;
+      margin-top: 4px;
+      font-size: var(--text-caption);
+      font-weight: 500;
+      color: var(--ink-2);
+    }
+    .step-chip.accent {
+      background: var(--mint-bg);
+      color: var(--mint-ink);
+    }
+    .step-chip.accent small { color: var(--mint-ink); }
+
+    .track-list {
+      display: flex;
+      flex-direction: column;
+      gap: var(--sp-4);
+    }
+    .track-row {
+      padding: var(--sp-4) var(--sp-5);
+      border-radius: var(--radius-inner);
+    }
+    .track-row.sync { background: var(--orange-bg); }
+    .track-row.async { background: var(--purple-bg); }
+    .track-row strong {
+      display: block;
+      font-size: 17px;
+      font-weight: 700;
+      margin-bottom: var(--sp-2);
+      color: var(--ink);
+    }
+    .track-row.sync strong { color: var(--orange-ink); }
+    .track-row.async strong { color: var(--purple-ink); }
+    .track-row .lines {
+      font-size: var(--text-body-sm);
+      color: var(--ink-2);
+      gap: 6px;
+    }
+
+    /* 10 — Agent 1 (Inline Badges Replacing Rounded-Corner Top Borders) */
+    .agent-grid {
+      width: 100%;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--sp-6);
+    }
+    .a-card {
+      padding: var(--sp-6) var(--sp-7);
+      border-radius: var(--radius-card);
+      background: var(--white);
+      border: 1px solid var(--border);
+    }
+    .a-card h3 {
+      font-size: var(--text-card-lg);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--ink);
+    }
+    .a-card .lines {
+      font-size: var(--text-body);
+      color: var(--ink-2);
+      gap: var(--sp-2);
+    }
+
+    /* 11 — Agent 2 (Flattened Flow Band, No Nested Outer Card) */
+    .hitl-band {
+      width: 100%;
+      margin-top: var(--sp-6);
+      padding-top: var(--sp-6);
+      border-top: 1px solid var(--border);
+    }
+    .hitl-steps {
+      display: grid;
+      grid-template-columns: 1fr 22px 1fr 22px 1fr 22px 1fr 22px 1fr;
+      align-items: stretch;
+      gap: var(--sp-1);
+    }
+    .h-node {
+      padding: var(--sp-5) var(--sp-3);
+      border-radius: var(--radius-card);
+      background: var(--white);
+      border: 1px solid var(--border-strong);
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .h-node.suspend {
+      background: var(--orange-bg);
+      border-color: var(--orange-bd);
+    }
+    .h-node.resume {
+      background: var(--mint-bg);
+      border-color: var(--mint-bd);
+    }
+    .h-node b {
+      display: block;
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--ink);
+    }
+    .h-node.suspend b { color: var(--orange-ink); }
+    .h-node.resume b { color: var(--mint-ink); }
+    .h-node small {
+      display: block;
+      margin-top: var(--sp-2);
+      font-size: var(--text-caption);
+      color: var(--ink-2);
+      line-height: 1.42;
+      text-wrap: pretty;
+    }
+
+    .cap-strip {
+      width: 100%;
+      margin-top: var(--sp-6);
+      padding: var(--sp-4) var(--sp-6);
+      border-radius: var(--radius-card);
+      background: var(--surface-subtle);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--sp-5);
+      font-size: var(--text-body);
+      font-weight: 600;
+      color: var(--ink-2);
+    }
+    .cap-strip strong { color: var(--ink); font-weight: 700; }
+    .cap-strip .cap-tags {
+      display: flex;
+      gap: var(--sp-2);
+    }
+    .cap-strip span.tag {
+      padding: 5px 12px;
+      border-radius: var(--radius-chip);
+      background: var(--white);
+      color: var(--mint-ink);
+      font-weight: 700;
+      border: 1px solid var(--mint-bd);
+      font-size: 14px;
+    }
+
+    /* 12 — LiteLLM + Langfuse */
+    .ref-grid {
+      width: 100%;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--sp-6);
+    }
+    .ref-card {
+      padding: var(--sp-6) var(--sp-7);
+      border-radius: var(--radius-card);
+      background: var(--white);
+      border: 1px solid var(--mint-bd);
+    }
+    .ref-card:nth-child(2) { border-color: var(--purple-bd); }
+    .ref-card h3 {
+      font-size: var(--text-card-lg);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--ink);
+      margin-bottom: var(--sp-4);
+    }
+    .ref-card .lines {
+      font-size: var(--text-body);
+      color: var(--ink-2);
+      gap: var(--sp-3);
+    }
+    .ref-card a { color: var(--mint-ink); font-weight: 700; }
+    .ref-card:nth-child(2) a { color: var(--purple-ink); }
+
+    .limit-row {
+      width: 100%;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--sp-5);
+      margin-top: var(--sp-6);
+    }
+    .limit-item {
+      padding: var(--sp-5) var(--sp-6);
+      border-radius: var(--radius-card);
+      background: var(--orange-bg);
+      border: 1px solid var(--orange-bd);
+    }
+    .limit-item strong {
+      display: block;
+      font-size: var(--text-card-md);
+      font-weight: 700;
+      letter-spacing: -0.015em;
+      color: var(--orange-ink);
+      margin-bottom: var(--sp-2);
+    }
+    .limit-item .lines {
+      font-size: var(--text-body-sm);
+      color: var(--ink-2);
+      gap: 6px;
+    }
+
+    /* 13 — Tradeoff Table */
+    .to-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      background: var(--white);
+      border-radius: var(--radius-card);
+      overflow: hidden;
+      border: 1px solid var(--border-strong);
+    }
+    .to-table th {
+      background: #14324c;
+      color: var(--white);
+      text-align: left;
+      padding: 18px 22px;
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+    .to-table td {
+      padding: 22px 22px;
+      border-bottom: 1px solid var(--border);
+      font-size: var(--text-body);
+      line-height: 1.54;
+      color: var(--ink-2);
+      vertical-align: middle;
+      word-break: keep-all;
+      text-wrap: pretty;
+    }
+    .to-table tbody tr:nth-child(even) td {
+      background: #fafcfe;
+    }
+    .to-table tbody tr:last-child td { border-bottom: 0; }
+    .to-table th:nth-child(1), .to-table td:nth-child(1) { width: 17%; }
+    .to-table th:nth-child(2), .to-table td:nth-child(2) { width: 26%; }
+    .to-table th:nth-child(3), .to-table td:nth-child(3) { width: 27%; }
+    .to-table th:nth-child(4), .to-table td:nth-child(4) { width: 30%; }
+    .to-table td:first-child { font-weight: 700; color: var(--ink); }
+    .to-table td:last-child { color: var(--mint-ink); font-weight: 700; }
+
+    /* 14 — Discussion */
+    .disc-grid {
+      width: 100%;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--sp-6);
+    }
+    .disc-card {
+      padding: var(--sp-6) var(--sp-7);
+      border-radius: var(--radius-card);
+      background: var(--white);
+      border: 1px solid var(--mint-bd);
+    }
+    .disc-card h3 {
+      font-size: var(--text-card-lg);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--ink);
+    }
+    .disc-card .lines {
+      font-size: var(--text-body);
+      color: var(--ink-2);
+      gap: var(--sp-2);
+    }
+
+    /* Presenter Chrome: Bottom-Left Help (Aligned with Slide Grid & Footer) + Crisp SVG Controls */
+    .help {
+      position: fixed;
+      left: 80px;
+      bottom: 20px;
+      z-index: 20;
+      color: var(--ink-3);
+      font-size: var(--text-caption);
+      font-weight: 600;
+      letter-spacing: .01em;
+      pointer-events: none;
+    }
+    .controls {
+      position: fixed;
+      right: 20px;
+      top: 16px;
+      z-index: 20;
+      display: flex;
+      gap: 6px;
+      opacity: .68;
+      transition: opacity .18s ease;
+    }
+    .controls:hover, .controls:focus-within { opacity: 1; }
+    .controls button {
+      cursor: pointer;
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      border: 1px solid var(--border-strong);
+      color: var(--ink);
+      background: rgba(255, 255, 255, .94);
+      backdrop-filter: blur(8px);
+      display: grid;
+      place-items: center;
+      padding: 0;
+      font-family: inherit;
+      box-shadow: 0 4px 12px rgba(15, 23, 42, .08);
+      transition: background .15s ease, border-color .15s ease, color .15s ease;
+    }
+    .controls button svg {
+      width: 18px;
+      height: 18px;
+      display: block;
+    }
+    .controls button:hover {
+      background: var(--mint-bg);
+      border-color: var(--mint-bd);
+      color: var(--mint-ink);
+    }
+
+    #notesPanel {
+      display: none;
+      position: fixed;
+      z-index: 23;
+      right: 24px;
+      bottom: 64px;
+      width: min(540px, calc(100vw - 48px));
+      max-height: min(50vh, 450px);
+      padding: var(--sp-6);
+      border-radius: var(--radius-card);
+      background: var(--white);
+      color: var(--ink);
+      border: 1px solid var(--border-strong);
+      box-shadow: var(--shadow-panel);
+      overflow: auto;
+    }
+    #notesPanel.open { display: block; }
+    #notesPanel h3 {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: var(--sp-3);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: var(--sp-3);
+    }
+    #notesPanel .pace-badge {
+      font-size: var(--text-caption);
+      padding: 4px 11px;
+      border-radius: 99px;
+      background: var(--mint-bg);
+      color: var(--mint-ink);
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+    }
+    #notesPanel p {
+      font-size: var(--text-body-sm);
+      line-height: 1.62;
+      margin-top: var(--sp-3);
+      color: var(--ink-2);
+      text-wrap: pretty;
+    }
+
+    #overview {
+      display: none;
+      position: fixed;
+      z-index: 25;
+      inset: 0;
+      padding: 36px 40px;
+      background: rgba(240, 245, 251, .97);
+      overflow: auto;
+    }
+    #overview.open { display: block; }
+    #overview h2 {
+      margin: 0 0 var(--sp-6);
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: var(--ink);
+    }
+    #overview .thumbs {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(180px, 1fr));
+      gap: var(--sp-4);
+    }
+    #overview .thumb {
+      cursor: pointer;
+      background: var(--white);
+      color: var(--ink);
+      border: 1px solid var(--border-strong);
+      border-radius: 12px;
+      min-height: 112px;
+      padding: var(--sp-5);
+      text-align: left;
+      font: inherit;
+      transition: border-color .15s ease, background .15s ease;
+    }
+    #overview .thumb span {
+      display: block;
+      color: var(--mint-ink);
+      font-size: 14px;
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
+      margin-bottom: var(--sp-2);
+    }
+    #overview .thumb strong {
+      font-size: var(--text-body);
+      font-weight: 700;
+      line-height: 1.38;
+      color: var(--ink);
+    }
+    #overview .thumb:hover {
+      border-color: var(--mint);
+      background: var(--mint-bg);
+    }
+    #overview .close-overview {
+      margin-top: var(--sp-6);
+      padding: 11px 20px;
+      border: 0;
+      background: var(--mint);
+      color: var(--white);
+      font: inherit;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      border-radius: var(--radius-chip);
+    }
+    #overview .close-overview:hover { background: var(--mint-ink); }
+    .speaker-notes { display: none; }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { transition-duration: 0.01ms !important; }
+    }
+
+    @media print {
+      @page { size: 16in 9in; margin: 0; }
+      html, body { width: auto; height: auto; overflow: visible; background: var(--white); }
+      #deck { position: static; transform: none !important; left: 0 !important; top: 0 !important; width: 16in; height: auto; box-shadow: none; overflow: visible; }
+      .slide, .slide.active { display: flex !important; flex-direction: column; position: relative; width: 16in; height: 9in; padding: 52px 80px 64px; break-after: page; page-break-after: always; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .slide.arch-slide { padding: 44px 80px 52px; }
+      .controls, .help, .deck-progress, #notesPanel, #overview { display: none !important; }
+    }
+  </style>
+</head>
+<body>
+<main id="deck" aria-label="B2B AI Agent 구독 플랫폼 설계 발표 자료">
+
+  <!-- 01 Cover -->
+  <section class="slide cover active" data-title="표지" data-pace="목표 0.5분 · 누적 0:30">
+    <div class="hero">
+      <span class="accent" aria-hidden="true"></span>
+      <h1>B2B AI Agent<br><span class="mint">구독 플랫폼 설계</span></h1>
+      <div class="cover-mark">이재준 · 2026. 11. 25.</div>
+    </div>
+    <footer class="footer"><strong>01</strong> / 14</footer>
+    <aside class="speaker-notes">
+      <p><strong>[0:00 ~ 0:30]</strong> 안녕하세요, 5주차 발표를 맡은 이재준입니다. 이번 주제는 책에 없는 AI 및 Agent 시스템이라, 예전에 LiteLLM과 Langfuse로 구독형 AI 서비스를 구축했던 경험을 바탕으로 공통 설계 문제를 준비했습니다. 약 15분간 진행하겠습니다.</p>
+    </aside>
+  </section>
+
+  <!-- 02 Domain Background -->
+  <section class="slide" data-title="도메인 배경" data-pace="목표 1.0분 · 누적 1:30">
+    <div class="slide-head">
+      <div class="slide-head-main">
+        <span class="title-accent" aria-hidden="true"></span>
+        <h2 class="heading">챗봇에서 B2B AI Agent 구독 플랫폼으로</h2>
+      </div>
+    </div>
+    <div class="slide-body">
+      <div class="compare-row">
+        <div class="compare-card">
+          <h3>단순 AI 챗봇</h3>
+          <div class="lines">
+            <span>사용자 질문을 받으면 LLM을 한 번 호출합니다.</span>
+            <span>생성된 텍스트를 바로 응답하고 요청이 끝납니다.</span>
+          </div>
+        </div>
+        <div class="compare-card highlight">
+          <h3>도구 활용 AI Agent</h3>
+          <div class="lines">
+            <span>목표를 달성할 때까지 추론과 외부 도구 호출을 반복합니다.</span>
+            <span>사내 시스템 조회와 작업 실행을 거치므로 소요 시간과 토큰 소비가 유동적입니다.</span>
+          </div>
+        </div>
+      </div>
+      <div class="pain-grid">
+        <div class="pain-item">
+          <div class="card-head">
+            <span class="icon-chip blue" aria-hidden="true"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 14.5l4.5-4.5 3.5 3.5L17 7.5"/><path d="M13 7.5h4v4"/></svg></span>
+            <h4>비용 폭주</h4>
+          </div>
+          <div class="lines">
+            <span>한 번의 질문이 여러 번의 LLM 호출을 유발합니다.</span>
+            <span>조직과 개인 단위의 사용량 제한이 필수입니다.</span>
+          </div>
+        </div>
+        <div class="pain-item">
+          <div class="card-head">
+            <span class="icon-chip mint" aria-hidden="true"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="7.5" cy="10" r="3.5"/><path d="M11 10h6.5M15 10v2.5M17.5 10v2"/></svg></span>
+            <h4>하이브리드 API 키</h4>
+          </div>
+          <div class="lines">
+            <span>대기업은 자체 API 키 등록을 요구합니다.</span>
+            <span>중소 고객은 플랫폼 공용 키를 쓰고 월말 청구를 원합니다.</span>
+          </div>
+        </div>
+        <div class="pain-item">
+          <div class="card-head">
+            <span class="icon-chip orange" aria-hidden="true"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2.5L4 5v4.5c0 4 2.6 6.8 6 8 3.4-1.2 6-4 6-8V5l-6-2.5z"/><path d="M7.5 10l1.8 1.8 3.4-3.6"/></svg></span>
+            <h4>보안과 권한 감사</h4>
+          </div>
+          <div class="lines">
+            <span>개인정보 유출과 외부 문서 기반 악성 지시를 막아야 합니다.</span>
+            <span>누가 어떤 도구와 데이터를 썼는지 모두 추적해야 합니다.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <footer class="footer"><strong>02</strong> / 14</footer>
+    <aside class="speaker-notes">
+      <p><strong>[0:30 ~ 1:30]</strong> 단순 챗봇은 LLM 1회 호출로 끝나지만, 도구를 쓰는 Agent는 목표를 달성할 때까지 LLM과 외부 도구를 여러 번 왕복합니다. 실행 시간과 토큰 소비가 비결정적이죠.</p>
+      <p>이걸 B2B 구독 서비스로 운영하면 세 가지가 핵심 과제가 됩니다. 첫째 루프로 인한 비용 폭주, 둘째 고객사 자체 키(BYOK)와 공용 키 사후 청구의 공존, 셋째 사내 기밀 유출과 권한 상승을 막는 보안 감사입니다.</p>
+    </aside>
+  </section>
+
+  <!-- 03 Hierarchy & Lifecycle -->
+  <section class="slide" data-title="실행 단위와 요청 흐름" data-pace="목표 1.5분 · 누적 3:00">
+    <div class="slide-head">
+      <div class="slide-head-main">
+        <span class="title-accent" aria-hidden="true"></span>
+        <h2 class="heading">실행 단위와 요청 처리 흐름</h2>
+      </div>
+    </div>
+    <div class="slide-body">
+      <div class="hier-cards">
+        <div class="hier-card">
+          <div class="card-head">
+            <span class="idx-pill mint">단위 1</span>
+            <strong>세션 (대화방)</strong>
+          </div>
+          <p>사용자가 이어가는 전체 대화 문맥의 묶음입니다.</p>
+        </div>
+        <div class="flow-arrow" aria-hidden="true"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7.5 4.5L13 10l-5.5 5.5"/></svg></div>
+        <div class="hier-card">
+          <div class="card-head">
+            <span class="idx-pill mint">단위 2</span>
+            <strong>턴 (사용자 질문 1회)</strong>
+          </div>
+          <p>질문 한 번에 대한 전체 추적(Trace) 단위입니다.</p>
+        </div>
+        <div class="flow-arrow" aria-hidden="true"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7.5 4.5L13 10l-5.5 5.5"/></svg></div>
+        <div class="hier-card">
+          <div class="card-head">
+            <span class="idx-pill mint">단위 3</span>
+            <strong>스텝 (개별 LLM 호출과 도구)</strong>
+          </div>
+          <p>한 턴 안에서 LLM 호출과 도구 실행이 여러 번 반복됩니다.</p>
+        </div>
+      </div>
+
+      <div class="lifecycle-band">
+        <div class="lc-row">
+          <div class="lc-node"><b>1. 인증과 입력 검사</b><small>개인정보와 악성 프롬프트를 먼저 차단</small></div>
+          <div class="flow-arrow" aria-hidden="true"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7.5 4.5L13 10l-5.5 5.5"/></svg></div>
+          <div class="lc-node"><b>2. 진입 사전 확인</b><small>잔액 소진 계정을 빠르게 차단 (Fail-fast)</small></div>
+          <div class="flow-arrow" aria-hidden="true"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7.5 4.5L13 10l-5.5 5.5"/></svg></div>
+          <div class="lc-loop">
+            <div class="loop-head">3. Agent 실행 루프 (목표 달성까지 반복)</div>
+            <div class="lc-loop-items">
+              <div class="lc-sub"><b>3a. LLM 호출</b><small>키 선택 후 호출별 예산 예약</small></div>
+              <div class="lc-sub"><b>3b. 도구 실행</b><small>본인 권한 확인 및 결과물 검사</small></div>
+              <div class="lc-sub"><b>3c. 상태 저장</b><small>단계별 저장 및 승인 대기</small></div>
+            </div>
+          </div>
+          <div class="flow-arrow" aria-hidden="true"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7.5 4.5L13 10l-5.5 5.5"/></svg></div>
+          <div class="lc-node"><b>4. 출력과 스트리밍</b><small>민감정보 검사 후 글자 단위 실시간 전송 (SSE)</small></div>
+          <div class="flow-arrow" aria-hidden="true"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7.5 4.5L13 10l-5.5 5.5"/></svg></div>
+          <div class="lc-node"><b>5. 추적과 과금</b><small>개별 LLM 호출 단위로 비동기 집계</small></div>
+        </div>
+      </div>
+    </div>
+    <footer class="footer"><strong>03</strong> / 14</footer>
+    <aside class="speaker-notes">
+      <p><strong>[1:30 ~ 3:00]</strong> 아키텍처를 설계할 때 턴과 개별 호출 단위가 섞이지 않도록 세 단계로 나눕니다. 대화방(세션) 안에 질문 1회(턴)가 있고, 턴 안에 여러 번의 개별 LLM 호출과 도구 실행(스텝)이 들어갑니다.</p>
+      <p>흐름에서 두 가지를 강조하겠습니다. 첫째, LLM 게이트웨이 호출(3a)은 루프 뒤에 오는 게 아니라 Agent 루프 안에서 도구 실행(3b)과 반복됩니다. 둘째, 예산 확인이 2단계(진입 Fail-fast)와 3a단계(호출 직전 원자적 예약) 두 번 일어나며 각자 역할이 다릅니다. 4단계의 SSE는 ChatGPT처럼 답변이 글자 단위로 실시간 전송되는 스트리밍 방식입니다.</p>
+    </aside>
+  </section>
+
+  <!-- 04 Detailed Functional Requirements -->
+  <section class="slide" data-title="기능 요구사항" data-pace="목표 1.5분 · 누적 4:30">
+    <div class="slide-head">
+      <div class="slide-head-main">
+        <span class="title-accent" aria-hidden="true"></span>
+        <h2 class="heading">기능 요구사항</h2>
+      </div>
+    </div>
+    <div class="slide-body">
+      <div class="f-grid">
+        <article class="f-card">
+          <span class="f-num">F1</span>
+          <div>
+            <h3>하이브리드 API 키 관리 및 과금</h3>
+            <div class="lines">
+              <span>고객사는 자체 LLM API 키(BYOK)를 등록, 교체, 즉시 폐기할 수 있어야 합니다.</span>
+              <span>자체 키가 없으면 플랫폼 공용 키로 자동 연결하고, 소비된 입력·출력 토큰 기준으로 월말 청구합니다.</span>
+            </div>
+          </div>
+        </article>
+        <article class="f-card">
+          <span class="f-num">F2</span>
+          <div>
+            <h3>조직 계층별 사용량 및 예산 제한</h3>
+            <div class="lines">
+              <span>회사, 팀, 개인 단위로 분당 요청 수, 분당 토큰 수, 일·월간 예산 상한을 설정합니다.</span>
+              <span>예산의 80%에 도달하면 경고를 보내고, 100%에 도달하면 추가 호출을 즉시 차단합니다.</span>
+            </div>
+          </div>
+        </article>
+        <article class="f-card">
+          <span class="f-num">F3</span>
+          <div>
+            <h3>입력·도구·출력 다계층 가드레일</h3>
+            <div class="lines">
+              <span>입력과 출력에서 개인정보(주민번호·이메일·카드번호 등)와 프롬프트 인젝션을 차단하거나 마스킹합니다.</span>
+              <span>외부 문서나 이메일 등 도구가 가져온 결과물에 숨겨진 악성 지시(간접 인젝션)도 별도로 검사합니다.</span>
+            </div>
+          </div>
+        </article>
+        <article class="f-card">
+          <span class="f-num">F4</span>
+          <div>
+            <h3>도구 연동 및 작업 상태 관리</h3>
+            <div class="lines">
+              <span>대화 이력을 유지하며 사내 도구(Slack·Jira·DB)는 반드시 호출한 사용자 본인의 권한으로만 실행합니다.</span>
+              <span>일반 응답은 실시간 스트리밍(SSE)하고, 삭제·결제 같은 위험 작업은 사용자 승인 후 중단 지점부터 재개합니다.</span>
+            </div>
+          </div>
+        </article>
+        <article class="f-card wide">
+          <span class="f-num">F5</span>
+          <div class="f-wide-inner">
+            <h3>전 구간 이력 추적 (Observability)</h3>
+            <div class="lines">
+              <span>모든 실행에 대해 회사, 사용자, 대화방, 턴, 개별 LLM 호출 단위로 토큰 사용량, 추정 비용, 지연 시간, 도구 실행 결과를 조회할 수 있어야 합니다.</span>
+            </div>
+          </div>
+        </article>
+      </div>
+    </div>
+    <footer class="footer"><strong>04</strong> / 14</footer>
+    <aside class="speaker-notes">
+      <p><strong>[3:00 ~ 4:30]</strong> 스터디원분들이 월요일 설계 PR을 작성하실 때 기준이 될 기능 요구사항 5가지입니다.</p>
+      <p>F1은 자체 키 등록·즉시 폐기와 공용 키 월말 청구, F2는 회사·팀·개인 계층별 속도와 예산(80% 경고, 100% 차단), F3은 개인정보와 도구 반환값의 간접 인젝션 검사, F4는 호출자 본인 권한 위임과 승인 대기 후 재개, F5는 5개 식별 축 기반 전체 추적입니다.</p>
+    </aside>
+  </section>
+
+  <!-- 05 Detailed Non-Functional Requirements -->
+  <section class="slide" data-title="비기능 요구사항" data-pace="목표 1.0분 · 누적 5:30">
+    <div class="slide-head">
+      <div class="slide-head-main">
+        <span class="title-accent" aria-hidden="true"></span>
+        <h2 class="heading">비기능 요구사항</h2>
+      </div>
+    </div>
+    <div class="slide-body">
+      <div class="n-grid">
+        <div class="n-card">
+          <div class="n-head"><span class="n-badge">N1</span><h3>응답 지연 기준 (성능)</h3></div>
+          <div class="lines">
+            <span>게이트웨이와 입력 가드레일이 추가하는 지연은 개별 LLM 호출당 <strong>200ms 이하</strong>로 유지합니다.</span>
+            <span>도구 실행이 길어져도 사용자가 멈춘 것처럼 느끼지 않도록 진행 상태 알림을 <strong>1초 이내</strong>에 전송합니다.</span>
+          </div>
+        </div>
+        <div class="n-card">
+          <div class="n-head"><span class="n-badge">N2</span><h3>키 보안 및 테넌트 격리 (보안)</h3></div>
+          <div class="lines">
+            <span>고객사 자체 키는 암호화해 보관하며, 로그나 추적 화면에 원문이 절대 노출되지 않아야 합니다.</span>
+            <span>키를 폐기하면 <strong>수 초 이내</strong>에 모든 서버에서 사용이 중단되고, 회사 간 대화·캐시·권한이 완전히 격리되어야 합니다.</span>
+          </div>
+        </div>
+        <div class="n-card">
+          <div class="n-head"><span class="n-badge">N3</span><h3>예산 통제 및 과금 정합성 (정확성)</h3></div>
+          <div class="lines">
+            <span>한 사용자가 동시에 여러 요청을 보내도 월간 예산 초과 오차를 최소화해야 합니다.</span>
+            <span>공용 키 과금 기록은 개별 LLM 호출 단위로 중복 청구되거나 누락되지 않아야 합니다.</span>
+          </div>
+        </div>
+        <div class="n-card">
+          <div class="n-head"><span class="n-badge">N4</span><h3>장애 격리 및 가용성 (안정성)</h3></div>
+          <div class="lines">
+            <span>특정 LLM 공급자에서 속도 제한(429)이나 장애가 발생해도 다른 키나 예비 모델로 자동 전환합니다.</span>
+            <span>특정 외부 도구가 응답하지 않아도 타임아웃과 차단기로 전체 챗봇 장애 전파를 막아야 합니다.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <footer class="footer"><strong>05</strong> / 14</footer>
+    <aside class="speaker-notes">
+      <p><strong>[4:30 ~ 5:30]</strong> 아키텍처의 기술 선택을 가르는 비기능 기준 4가지입니다. N1은 200ms 이하 게이트웨이 오버헤드와 1초 이내 상태 알림, N2는 키 원문 노출 금지와 폐기 시 수 초 내 무효화, N3는 동시 요청 예산 정합성과 호출 단위 과금 멱등성, N4는 LLM 폴백과 도구 장애 격리입니다.</p>
+    </aside>
+  </section>
+
+  <!-- 06 Traffic Scale & Intuition -->
+  <section class="slide" data-title="트래픽 규모와 설계 감 잡기" data-pace="목표 1.0분 · 누적 6:30">
+    <div class="slide-head">
+      <div class="slide-head-main">
+        <span class="title-accent" aria-hidden="true"></span>
+        <h2 class="heading">트래픽 규모와 설계 감 잡기</h2>
+      </div>
+    </div>
+    <div class="slide-body">
+      <div class="scale-steps">
+        <div class="scale-card">
+          <div class="s-label">1. 고객 규모</div>
+          <strong>500개사</strong>
+          <div class="lines">
+            <span>회사당 평균 100명 이용</span>
+            <span>월간 활성 사용자 5만 명</span>
+            <span>일간 활성 사용자 약 2만 명</span>
+          </div>
+        </div>
+        <div class="flow-arrow" aria-hidden="true"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7.5 4.5L13 10l-5.5 5.5"/></svg></div>
+        <div class="scale-card">
+          <div class="s-label">2. 일일 대화량</div>
+          <strong>하루 100만 턴</strong>
+          <div class="lines">
+            <span>1인당 하루 평균 약 50회 질의</span>
+            <span>일평균 초당 약 12회 대화</span>
+            <span>업무 피크 시간대 초당 약 100회</span>
+          </div>
+        </div>
+        <div class="flow-arrow" aria-hidden="true"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7.5 4.5L13 10l-5.5 5.5"/></svg></div>
+        <div class="scale-card">
+          <div class="s-label">3. 실제 LLM 부하</div>
+          <strong>초당 250건</strong>
+          <div class="lines">
+            <span>한 턴당 평균 2.5회 LLM 호출</span>
+            <span>피크 시 분당 약 15,000건 호출</span>
+            <span>도구 호출도 초당 100~200건 동반</span>
+          </div>
+        </div>
+        <div class="flow-arrow" aria-hidden="true"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7.5 4.5L13 10l-5.5 5.5"/></svg></div>
+        <div class="scale-card accent">
+          <div class="s-label">4. 플랫폼 공용 키 부하</div>
+          <strong>초당 175건</strong>
+          <div class="lines">
+            <span>자체 키 30% (초당 약 75건)</span>
+            <span>공용 키 70% (초당 약 175건)</span>
+            <span>호출당 2천 토큰 시 분당 2,100만 토큰</span>
+          </div>
+        </div>
+      </div>
+      <div class="intuition-grid">
+        <div class="int-box warn">
+          <h3>왜 공용 키 풀 설계가 필수인가요?</h3>
+          <div class="lines">
+            <span>분당 약 2,100만 토큰은 단일 LLM API 키나 단일 계정 한도를 크게 넘습니다.</span>
+            <span>따라서 여러 API 키와 리전을 묶어 분산 호출하고, 429 오류 시 자동으로 우회하는 키 풀 구조가 반드시 필요합니다.</span>
+          </div>
+        </div>
+        <div class="int-box info">
+          <h3>어느 정도 규모의 시스템인가요?</h3>
+          <div class="lines">
+            <span>초당 수만 건이 몰리는 B2C 소셜 서비스 수준의 대규모 샤딩까지는 필요하지 않습니다.</span>
+            <span>대신 <strong>예산·과금 정합성, 키·권한 보안 격리, 장시간 비동기 상태 관리</strong>가 핵심인 B2B 엔터프라이즈 규모입니다.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <footer class="footer"><strong>06</strong> / 14</footer>
+    <aside class="speaker-notes">
+      <p><strong>[5:30 ~ 6:30]</strong> 숫자만 던지면 감이 안 오기 때문에 산출 과정과 의미를 정리했습니다. 500개사, 월간 5만 명, 하루 100만 턴이면 업무 피크에 초당 100회 대화가 들어옵니다. Agent는 1턴에 평균 2.5번 LLM을 부르므로 실제 피크 부하는 초당 250건입니다.</p>
+      <p>이 중 공용 키 70%가 초당 175건, 분당 약 2,100만 토큰에 달합니다. 단일 API 키로는 절대 감당할 수 없어서 공용 키 풀이 필수이고, 반면 B2C 초대규모 샤딩보다는 정합성과 보안·상태 관리에 집중해야 하는 B2B 엔터프라이즈 규모입니다.</p>
+    </aside>
+  </section>
+
+  <!-- 07 Large Clean Architecture -->
+  <section class="slide arch-slide" data-title="전체 아키텍처" data-pace="목표 1.5분 · 누적 8:00">
+    <div class="slide-head">
+      <div class="slide-head-main">
+        <span class="title-accent" aria-hidden="true"></span>
+        <h2 class="heading">전체 아키텍처</h2>
+      </div>
+      <div class="arch-legend" aria-label="아키텍처 연결선 범례">
+        <span class="arch-legend-item"><span class="arch-legend-line" aria-hidden="true"></span>동기 요청 · 도구</span>
+        <span class="arch-legend-item"><span class="arch-legend-line green" aria-hidden="true"></span>LLM 호출 경로</span>
+        <span class="arch-legend-item"><span class="arch-legend-line purple" aria-hidden="true"></span>비동기 큐 · 스트리밍</span>
+        <span class="arch-legend-item"><span class="arch-legend-line orange" aria-hidden="true"></span>상태 · 보안 조회</span>
+      </div>
+    </div>
+    <div class="slide-body">
+      <div class="arch-canvas" role="img" aria-label="Client, API Gateway, Agent Execution Plane, LLM Gateway Plane, State Store, Async Metering and Observability 전체 아키텍처">
+        <div class="arch-zone" style="left:230px;top:14px;width:718px;height:202px;background:#f2f7ff;border-color:#93c5fd;"><span class="zlabel" style="color:#1646a1;">AGENT EXECUTION PLANE</span></div>
+        <div class="arch-zone" style="left:230px;top:254px;width:718px;height:126px;background:#eefbf6;border-color:#6ee7b7;"><span class="zlabel" style="color:#0b5a4e;">LLM GATEWAY &amp; GOVERNANCE PLANE</span></div>
+        <div class="arch-zone" style="left:230px;top:424px;width:416px;height:138px;background:#f8fafc;border-color:#cbd5e1;"><span class="zlabel" style="color:#334a5e;">STATE &amp; SECURITY</span></div>
+        <div class="arch-zone" style="left:668px;top:424px;width:592px;height:138px;background:#f9f5ff;border-color:#d2c3f8;"><span class="zlabel" style="color:#4c2d96;">ASYNC METERING &amp; OBSERVABILITY</span></div>
+
+        <svg viewBox="0 0 1280 576" aria-hidden="true">
+          <defs>
+            <marker id="arB" viewBox="0 0 10 10" markerWidth="7" markerHeight="7" refX="8" refY="5" orient="auto"><path d="M1 1 L9 5 L1 9" fill="none" stroke="#1b56c4" stroke-width="1.9"/></marker>
+            <marker id="arG" viewBox="0 0 10 10" markerWidth="7" markerHeight="7" refX="8" refY="5" orient="auto"><path d="M1 1 L9 5 L1 9" fill="none" stroke="#0e6f60" stroke-width="1.9"/></marker>
+            <marker id="arP" viewBox="0 0 10 10" markerWidth="7" markerHeight="7" refX="8" refY="5" orient="auto"><path d="M1 1 L9 5 L1 9" fill="none" stroke="#5e3bb5" stroke-width="1.9"/></marker>
+            <marker id="arO" viewBox="0 0 10 10" markerWidth="7" markerHeight="7" refX="8" refY="5" orient="auto"><path d="M1 1 L9 5 L1 9" fill="none" stroke="#b34019" stroke-width="1.9"/></marker>
+          </defs>
+          <!-- Blue: Sync request & tool invocation -->
+          <g stroke="#1b56c4" stroke-width="2.1" fill="none" marker-end="url(#arB)">
+            <path d="M102 130 V184"/>
+            <path d="M184 225 H202 V78 H244"/>
+            <path d="M428 166 H494"/>
+            <path d="M760 110 V120 H675 V132"/>
+            <path d="M710 166 H990"/>
+          </g>
+          <!-- Green: LLM Gateway routing (collision-free around zone labels) -->
+          <g stroke="#0e6f60" stroke-width="2.1" fill="none" marker-end="url(#arG)">
+            <path d="M272 110 V124 H215 V314 H244"/>
+            <path d="M870 110 V236 H202 V338 H244"/>
+            <path d="M436 326 H490"/>
+            <path d="M682 326 H736"/>
+            <path d="M924 326 H990"/>
+          </g>
+          <!-- Purple dashed: Async queue, events, streaming (Event Bus -> Observability routed cleanly below boxes) -->
+          <g stroke="#5e3bb5" stroke-width="2.0" stroke-dasharray="6 4" fill="none" marker-end="url(#arP)">
+            <path d="M428 78 H494"/>
+            <path d="M648 78 H714"/>
+            <path d="M864 360 V414 H767 V458"/>
+            <path d="M844 502 H890"/>
+            <path d="M767 540 V554 H1166 V544"/>
+            <path d="M248 502 H102 V264"/>
+          </g>
+          <!-- Orange dashed: State & security lookups (ordered channels, zero crossings) -->
+          <g stroke="#b34019" stroke-width="1.9" stroke-dasharray="4 4" fill="none" marker-end="url(#arO)">
+            <path d="M339 110 V130"/>
+            <path d="M428 96 H466 V458"/>
+            <path d="M760 360 V392 H307 V458"/>
+            <path d="M800 360 V406 H576 V458"/>
+          </g>
+        </svg>
+
+        <div class="abox slate" style="left:20px;top:60px;width:164px;height:70px"><strong>Client (Web/App)</strong><small>실시간 스트리밍 · 승인</small></div>
+        <div class="abox purple" style="left:20px;top:190px;width:164px;height:70px"><strong>API Gateway</strong><small>인증 · WAF · 사전 확인</small></div>
+
+        <div class="abox blue" style="left:250px;top:46px;width:178px;height:64px"><strong>Agent Orchestrator</strong><small>실행 루프 · 상태 저장</small></div>
+        <div class="abox red" style="left:250px;top:136px;width:178px;height:60px"><strong>Orchestrator Guardrail</strong><small>도구 권한 · 결과물 검사</small></div>
+        <div class="abox purple" style="left:500px;top:46px;width:148px;height:64px"><strong>Job Queue</strong><small>장시간 · 승인 재개</small></div>
+        <div class="abox blue" style="left:720px;top:46px;width:204px;height:64px"><strong>Agent Worker</strong><small>비동기 실행 · 상태 복원</small></div>
+        <div class="abox blue" style="left:500px;top:136px;width:210px;height:60px"><strong>Tool Sandbox / MCP</strong><small>본인 권한 위임 · 격리 실행</small></div>
+
+        <div class="abox mint" style="left:250px;top:292px;width:186px;height:68px"><strong>LLM Gateway</strong><small>가상 키 · 장애 폴백</small></div>
+        <div class="abox warn" style="left:496px;top:292px;width:186px;height:68px"><strong>Gateway Guardrails</strong><small>동기 차단 · 비동기 탐지</small></div>
+        <div class="abox mint" style="left:742px;top:292px;width:182px;height:68px"><strong>Key Pool &amp; Limit</strong><small>자체 키 · 공용 풀 · 예약</small></div>
+
+        <div class="abox warn" style="left:996px;top:130px;width:262px;height:72px"><strong>External SaaS / 사내 DB</strong><small>Slack · Jira · 사내 문서</small></div>
+        <div class="abox warn" style="left:996px;top:284px;width:262px;height:84px"><strong>External LLM Providers</strong><small>OpenAI · Anthropic · Gemini</small></div>
+
+        <div class="abox slate" style="left:248px;top:464px;width:118px;height:76px"><strong>Redis</strong><small>속도 제한 · 예약<br>Pub/Sub 전달</small></div>
+        <div class="abox slate" style="left:384px;top:464px;width:122px;height:76px"><strong>PostgreSQL</strong><small>실행 체크포인트<br>과금 원장</small></div>
+        <div class="abox red" style="left:522px;top:464px;width:108px;height:76px"><strong>KMS / Vault</strong><small>키 암호화 보관</small></div>
+
+        <div class="abox purple" style="left:690px;top:464px;width:154px;height:76px"><strong>Event Bus (Kafka)</strong><small>호출 이력 · 과금 이벤트</small></div>
+        <div class="abox warn" style="left:896px;top:464px;width:150px;height:76px"><strong>Billing Worker</strong><small>공용 키 중복 없는 집계</small></div>
+        <div class="abox purple" style="left:1092px;top:464px;width:148px;height:76px"><strong>Observability</strong><small>실행 추적 · 비용 분석</small></div>
+      </div>
+    </div>
+    <footer class="footer"><strong>07</strong> / 14</footer>
+    <aside class="speaker-notes">
+      <p><strong>[6:30 ~ 8:00]</strong> 전체 아키텍처입니다. 위쪽 파란 영역이 Agent 실행, 중간 초록 영역이 LLM 게이트웨이, 아래쪽이 상태 저장소와 비동기 이벤트 파이프라인입니다.</p>
+      <p>단기 대화는 Orchestrator가 바로 실시간 스트리밍으로 응답하고, 장시간 작업이나 승인 재개는 Job Queue와 Worker로 넘긴 뒤 Redis Pub/Sub로 스트리밍을 이어줍니다. Orchestrator와 Worker 모두 LLM을 부를 때는 반드시 LLM 게이트웨이를 통하도록 일원화했습니다.</p>
+    </aside>
+  </section>
+
+  <!-- 08 Hybrid Key & Billing -->
+  <section class="slide" data-title="하이브리드 키 관리와 과금" data-pace="목표 1.5분 · 누적 9:30">
+    <div class="slide-head">
+      <div class="slide-head-main">
+        <span class="title-accent" aria-hidden="true"></span>
+        <h2 class="heading">하이브리드 키 관리와 사후 과금</h2>
+      </div>
+    </div>
+    <div class="slide-body">
+      <div class="vk-banner">클라이언트에는 플랫폼이 발급한 <strong>가상 키(Virtual Key)</strong>만 전달하고, 실제 API 키는 게이트웨이 내부에서만 바인딩합니다.</div>
+      <div class="split-2">
+        <div class="light-panel mint-b">
+          <h3><span class="mint">고객사 자체 키 (BYOK)</span> · <span class="num">30%</span></h3>
+          <div class="lines">
+            <span><b>암호화 보관 및 캐싱:</b> KMS로 암호화해 저장하고 단기 메모리 캐싱으로 지연을 줄입니다.</span>
+            <span><b>즉시 폐기 동기화:</b> 고객사가 키를 폐기하면 Pub/Sub로 모든 서버 캐시를 수 초 내 무효화합니다.</span>
+            <span><b>예산 단가 기준:</b> 공시 단가표를 기본으로 쓰되, 고객사별 할인 계약을 반영한 커스텀 단가를 허용합니다.</span>
+          </div>
+        </div>
+        <div class="light-panel orange-b">
+          <h3><span class="orange">플랫폼 공용 키 (Default)</span> · <span class="num">70%</span></h3>
+          <div class="lines">
+            <span><b>멀티 키·리전 풀:</b> 피크 초당 175건을 버티기 위해 여러 API 키로 분산 호출하고 429 오류 시 자동 우회합니다.</span>
+            <span><b>비동기 사용량 집계:</b> 응답의 입력·출력 토큰을 Kafka로 발행해 과금 워커가 원장에 적재합니다.</span>
+            <span><b>일 배치 정산 대조:</b> 외부 LLM 공급자 청구서와 내부 과금 원장을 매일 대조해 누락을 검증합니다.</span>
+          </div>
+        </div>
+      </div>
+      <div class="idemp-strip">
+        <span>한 턴에 LLM을 여러 번 호출하므로, 과금 중복 방지 키는 턴 ID가 아니라 <strong>개별 LLM 호출 고유 ID</strong>를 사용합니다.</span>
+        <span class="badge-val">개별 LLM 호출 ID 기준</span>
+      </div>
+    </div>
+    <footer class="footer"><strong>08</strong> / 14</footer>
+    <aside class="speaker-notes">
+      <p><strong>[8:00 ~ 9:30]</strong> 가상 키 패턴으로 실제 API 키를 게이트웨이 안쪽에만 숨깁니다. 자체 키(BYOK)는 매번 KMS를 호출하면 느리므로 단기 캐싱하되, 폐기 시 Pub/Sub로 즉시 무효화합니다.</p>
+      <p>공용 키는 피크 초당 175건을 버티기 위해 멀티 키 풀과 429 쿨다운이 필수입니다. 과금 중복 방지 키는 반드시 턴 ID가 아니라 개별 LLM 호출 ID(generation_id)를 써야 멀티스텝 2~3번째 호출이 중복으로 걸러져 누락되는 사고를 막을 수 있습니다.</p>
+    </aside>
+  </section>
+
+  <!-- 09 Limit & Guardrails -->
+  <section class="slide" data-title="사용량 제한과 2트랙 가드레일" data-pace="목표 1.0분 · 누적 10:30">
+    <div class="slide-head">
+      <div class="slide-head-main">
+        <span class="title-accent" aria-hidden="true"></span>
+        <h2 class="heading">계층별 사용량 제한과 2트랙 가드레일</h2>
+      </div>
+    </div>
+    <div class="slide-body">
+      <div class="split-2 flush">
+        <div class="light-panel">
+          <h3>예산 사전 예약과 사후 정산</h3>
+          <div class="step-strip">
+            <div class="step-chip">1. 사전 예약<small>추정 비용 및 만료 시간 설정</small></div>
+            <div class="flow-arrow" aria-hidden="true"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7.5 4.5L13 10l-5.5 5.5"/></svg></div>
+            <div class="step-chip">2. LLM 호출<small>실시간 스트리밍 응답</small></div>
+            <div class="flow-arrow" aria-hidden="true"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7.5 4.5L13 10l-5.5 5.5"/></svg></div>
+            <div class="step-chip accent">3. 사후 정산<small>실제 토큰 차감 및 예약 해제</small></div>
+          </div>
+          <div class="lines">
+            <span><b>계층별 속도 제한:</b> 개인, 팀, 회사 순서로 Redis Lua 스크립트에서 분당 요청·토큰 수를 원자적으로 검사합니다.</span>
+            <span><b>예약 누수 방지:</b> 응답 중 연결이 끊기거나 워커가 죽어도 만료 시간(TTL)이 지나면 예약된 예산이 자동 복구됩니다.</span>
+          </div>
+        </div>
+        <div class="light-panel">
+          <h3>LLM 입·출력 2트랙 가드레일</h3>
+          <div class="track-list">
+            <div class="track-row sync">
+              <strong>동기 차단 (100ms 이내 처리)</strong>
+              <div class="lines">
+                <span>주민번호·이메일 등 개인정보를 마스킹하거나 차단합니다.</span>
+                <span>경량 분류기와 금지어 정책으로 프롬프트 인젝션을 즉시 막습니다.</span>
+              </div>
+            </div>
+            <div class="track-row async">
+              <strong>비동기 탐지 및 조치 (스트리밍 지연 없음)</strong>
+              <div class="lines">
+                <span>별도 모델로 심층 정책 위반과 단시간 토큰 폭주 패턴을 감시합니다.</span>
+                <span>이상 행위가 탐지되면 경보를 보내고 해당 가상 키를 자동 정지합니다.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <footer class="footer"><strong>09</strong> / 14</footer>
+    <aside class="speaker-notes">
+      <p><strong>[9:30 ~ 10:30]</strong> LLM은 응답이 끝나야 출력 토큰을 알 수 있어, 호출 전 추정 비용을 예약하고 완료 시 정산합니다.</p>
+      <p><strong>[Q&amp;A 방어 - Redis TTL]</strong> 단일 잔액 숫자에서 선차감하면 키가 만료돼도 복구가 안 됩니다. 그래서 진행 중인 예약 건을 만료 타임스탬프가 있는 Redis ZSET으로 관리해, 가용 예산 = 한도 - 확정 사용액 - 만료되지 않은 활성 예약 합계로 계산합니다.</p>
+      <p>가드레일은 100ms 이내 경량 검사만 동기 차단하고, 무거운 심층 검사·이상 탐지는 비동기로 돌려 스트리밍 속도를 지킵니다.</p>
+    </aside>
+  </section>
+
+  <!-- 10 Agent 1 -->
+  <section class="slide" data-title="도구 연동과 보안 격리" data-pace="목표 1.0분 · 누적 11:30">
+    <div class="slide-head">
+      <div class="slide-head-main">
+        <span class="title-accent" aria-hidden="true"></span>
+        <h2 class="heading">도구 연동과 B2B 권한·보안 격리</h2>
+      </div>
+    </div>
+    <div class="slide-body">
+      <div class="agent-grid">
+        <div class="a-card">
+          <div class="card-head">
+            <span class="icon-chip blue" aria-hidden="true"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 5.5h13M6 10h8M8.5 14.5h3"/></svg></span>
+            <h3>역할별 도구 필터링 (MCP · RBAC)</h3>
+          </div>
+          <div class="lines">
+            <span>모든 도구를 모델에 한꺼번에 넘기지 않습니다.</span>
+            <span>사용자의 조직과 역할에 허용된 도구 목록만 동적으로 주입합니다.</span>
+          </div>
+        </div>
+        <div class="a-card">
+          <div class="card-head">
+            <span class="icon-chip mint" aria-hidden="true"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="8.5" cy="7" r="3"/><path d="M3.5 16c.6-2.5 2.5-4 5-4s4.4 1.5 5 4"/><path d="M13.5 10l1.5 1.5 3-3"/></svg></span>
+            <h3>호출자 본인 권한 위임 (OAuth)</h3>
+          </div>
+          <div class="lines">
+            <span>사내 Slack·Jira·문서 DB를 공용 서비스 계정으로 호출하면 일반 직원이 임원 문서를 보는 권한 상승이 발생합니다.</span>
+            <span>반드시 요청한 사용자 본인의 OAuth 토큰을 위임받아 실행합니다.</span>
+          </div>
+        </div>
+        <div class="a-card">
+          <div class="card-head">
+            <span class="icon-chip orange" aria-hidden="true"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2.5L4 5v4.5c0 4 2.6 6.8 6 8 3.4-1.2 6-4 6-8V5l-6-2.5z"/><path d="M10 7.5v3.5M10 13.5h.01"/></svg></span>
+            <h3>도구 결과물 간접 인젝션 방어</h3>
+          </div>
+          <div class="lines">
+            <span>외부 웹페이지나 이메일 본문에 숨겨진 악성 지시가 다음 단계를 탈취할 수 있습니다.</span>
+            <span>도구가 가져온 반환값도 신뢰할 수 없는 입력으로 보고 가드레일을 통과시킵니다.</span>
+          </div>
+        </div>
+        <div class="a-card">
+          <div class="card-head">
+            <span class="icon-chip purple" aria-hidden="true"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4" width="13" height="12" rx="2"/><path d="M7.5 10h5M10 7.5v5"/></svg></span>
+            <h3>실행 격리와 장애 차단</h3>
+          </div>
+          <div class="lines">
+            <span>도구마다 타임아웃과 장애 차단기(Circuit Breaker)를 적용합니다.</span>
+            <span>코드 실행이나 브라우저 자동화 같은 고위험 도구는 컨테이너 샌드박스에서 격리합니다.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <footer class="footer"><strong>10</strong> / 14</footer>
+    <aside class="speaker-notes">
+      <p><strong>[10:30 ~ 11:30]</strong> B2B Agent에서 가장 자주 놓치는 두 가지 보안 포인트입니다. 첫째, 공용 서비스 계정으로 사내 시스템을 읽으면 권한 상승(Confused Deputy)이 일어나므로 반드시 호출자 본인의 OAuth 토큰을 위임(On-Behalf-Of)받아야 합니다.</p>
+      <p>둘째, 사용자가 정상 질문을 해도 도구가 읽어온 외부 문서나 이메일에 악성 명령이 숨어 있을 수 있어, 도구 결과물도 반드시 간접 프롬프트 인젝션 검사를 거쳐야 합니다.</p>
+    </aside>
+  </section>
+
+  <!-- 11 Agent 2 -->
+  <section class="slide" data-title="비동기 작업과 승인 대기" data-pace="목표 1.0분 · 누적 12:30">
+    <div class="slide-head">
+      <div class="slide-head-main">
+        <span class="title-accent" aria-hidden="true"></span>
+        <h2 class="heading">비동기 작업 처리와 승인 대기 상태 관리</h2>
+      </div>
+    </div>
+    <div class="slide-body">
+      <div class="compare-row compact">
+        <div class="compare-card">
+          <h3>일반 대화와 짧은 도구 호출</h3>
+          <div class="lines">
+            <span>진행 상태 알림과 답변 토큰을 실시간 스트리밍(SSE)으로 바로 전달합니다.</span>
+          </div>
+        </div>
+        <div class="compare-card highlight">
+          <h3>장시간 작업과 사용자 승인 재개</h3>
+          <div class="lines">
+            <span>Job Queue와 비동기 Worker로 분리 실행하고, 결과는 Redis Pub/Sub로 스트리밍합니다.</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="hitl-band">
+        <div class="hitl-steps">
+          <div class="h-node"><b>1. 단계별 저장</b><small>매 스텝 결과를 DB 체크포인트에 기록</small></div>
+          <div class="flow-arrow" aria-hidden="true"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7.5 4.5L13 10l-5.5 5.5"/></svg></div>
+          <div class="h-node suspend"><b>2. 위험 작업 감지</b><small>삭제, 결제, 외부 발송 요청 발견</small></div>
+          <div class="flow-arrow" aria-hidden="true"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7.5 4.5L13 10l-5.5 5.5"/></svg></div>
+          <div class="h-node suspend"><b>3. 실행 일시 중지</b><small>상태 저장 후 서버 연결 즉시 반환</small></div>
+          <div class="flow-arrow" aria-hidden="true"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7.5 4.5L13 10l-5.5 5.5"/></svg></div>
+          <div class="h-node"><b>4. 사용자 승인</b><small>승인 이벤트를 Job Queue에 발행</small></div>
+          <div class="flow-arrow" aria-hidden="true"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7.5 4.5L13 10l-5.5 5.5"/></svg></div>
+          <div class="h-node resume"><b>5. 워커 재개</b><small>상태 복원 및 토큰 갱신 후 이어서 실행</small></div>
+        </div>
+      </div>
+
+      <div class="cap-strip">
+        <span><strong>대화 메모리:</strong> 길어진 대화는 최근 이력 유지 및 과거 내용 요약</span>
+        <div class="cap-tags">
+          <span class="tag">최대 스텝 제한</span>
+          <span class="tag">최대 도구 호출 제한</span>
+          <span class="tag">최대 토큰 제한</span>
+        </div>
+      </div>
+    </div>
+    <footer class="footer"><strong>11</strong> / 14</footer>
+    <aside class="speaker-notes">
+      <p><strong>[11:30 ~ 12:30]</strong> 장애 복구용 체크포인트와 사용자 승인 대기(HITL)를 하나의 흐름으로 통합했습니다. 삭제·결제 앞에서는 승인까지 몇 시간이 걸릴 수 있어 서버 스레드를 점유하지 않고 상태를 저장한 뒤 중지했다가, 승인 이벤트가 오면 Job Queue를 통해 Worker가 복원·재개합니다.</p>
+      <p><strong>[Q&amp;A 방어 - 승인 대기 중 OAuth 토큰 만료]</strong> 2시간 뒤 승인 시 기존 OAuth 토큰이 만료되어 있으면, KMS에 보관된 Refresh Token으로 재개 시점에 갱신하거나 승인 이벤트에 최신 사용자 인증 토큰을 실어 보냅니다.</p>
+    </aside>
+  </section>
+
+  <!-- 12 Reference LiteLLM + Langfuse -->
+  <section class="slide" data-title="실전 사례: LiteLLM과 Langfuse" data-pace="목표 1.5분 · 누적 14:00">
+    <div class="slide-head">
+      <div class="slide-head-main">
+        <span class="title-accent" aria-hidden="true"></span>
+        <h2 class="heading">실전 적용 사례: LiteLLM과 Langfuse</h2>
+      </div>
+    </div>
+    <div class="slide-body">
+      <div class="ref-grid">
+        <div class="ref-card">
+          <h3><a href="https://docs.litellm.ai/docs/proxy/architecture" target="_blank" rel="noopener">LiteLLM Proxy</a></h3>
+          <div class="lines">
+            <span><a href="https://docs.litellm.ai/docs/proxy/virtual_keys" target="_blank" rel="noopener">Virtual Keys</a>로 사용자·팀별 가상 키를 발급해 원본 키를 숨깁니다.</span>
+            <span><a href="https://docs.litellm.ai/docs/proxy/users" target="_blank" rel="noopener">Budgets &amp; Rate Limits</a>로 분당 속도와 주기별 예산을 통제합니다.</span>
+            <span><a href="https://docs.litellm.ai/docs/proxy/cost_tracking" target="_blank" rel="noopener">Spend Tracking</a>과 <a href="https://docs.litellm.ai/docs/proxy/guardrails/quick_start" target="_blank" rel="noopener">Guardrails</a>로 비용과 입출력을 제어합니다.</span>
+          </div>
+        </div>
+        <div class="ref-card">
+          <h3><a href="https://langfuse.com/docs/observability/overview" target="_blank" rel="noopener">Langfuse</a></h3>
+          <div class="lines">
+            <span><a href="https://langfuse.com/docs/observability/data-model" target="_blank" rel="noopener">Data Model</a>로 세션, 턴, 개별 호출과 도구 실행을 트리로 추적합니다.</span>
+            <span><a href="https://langfuse.com/docs/observability/features/users" target="_blank" rel="noopener">User Tracking</a>으로 사용자별 호출량과 패턴을 분석합니다.</span>
+            <span><a href="https://langfuse.com/docs/observability/features/token-and-cost-tracking" target="_blank" rel="noopener">Token &amp; Cost Tracking</a>으로 모델별 비용 대시보드를 구성합니다.</span>
+          </div>
+        </div>
+      </div>
+      <div class="limit-row">
+        <div class="limit-item">
+          <strong>단일 장애점 (SPOF)</strong>
+          <div class="lines">
+            <span>모든 LLM 트래픽이 프록시에 집중됩니다.</span>
+            <span>수평 확장과 DB 커넥션 튜닝이 필수입니다.</span>
+          </div>
+        </div>
+        <div class="limit-item">
+          <strong>관측성 도구와 과금 원장의 분리</strong>
+          <div class="lines">
+            <span>관측성 도구는 비동기 수집과 샘플링이 들어갑니다.</span>
+            <span>청구 원장으로 바로 쓰기엔 누락 위험이 있습니다.</span>
+          </div>
+        </div>
+        <div class="limit-item">
+          <strong>키 집중 보안 경계</strong>
+          <div class="lines">
+            <span>고객사 원본 키가 게이트웨이 DB에 모입니다.</span>
+            <span>KMS 암호화와 네트워크 격리가 최우선입니다.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <footer class="footer"><strong>12</strong> / 14</footer>
+    <aside class="speaker-notes">
+      <p><strong>[12:30 ~ 14:00]</strong> 실제 프로젝트에서는 LiteLLM Proxy와 Langfuse 조합으로 빠르게 구축했습니다. 기능보다 운영하며 겪은 세 가지 한계가 핵심입니다. 프록시가 단일 장애점이 된다는 점, Langfuse 같은 관측성 도구는 과금의 원본 원장으로 바로 쓰기 위험하다는 점, 모든 키가 모이는 DB가 최우선 보안 경계라는 점입니다.</p>
+    </aside>
+  </section>
+
+  <!-- 13 Tradeoffs -->
+  <section class="slide" data-title="핵심 트레이드오프" data-pace="목표 0.5분 · 누적 14:30">
+    <div class="slide-head">
+      <div class="slide-head-main">
+        <span class="title-accent" aria-hidden="true"></span>
+        <h2 class="heading">핵심 트레이드오프</h2>
+      </div>
+    </div>
+    <div class="slide-body">
+      <table class="to-table">
+        <thead>
+          <tr><th>설계 쟁점</th><th>선택지 A</th><th>선택지 B</th><th>트레이드오프</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>예산 통제 방식</td><td>호출 전 사전 예약과 사후 정산</td><td>비동기 집계 후 한도 초과 시 차단</td><td>예산 초과 방지 정확도와 구현 복잡도·지연의 균형</td></tr>
+          <tr><td>가드레일 위치</td><td>입력, 도구, 출력 모두 동기 차단</td><td>입력·도구는 동기, 출력은 비동기 탐지</td><td>보안 강도와 실시간 스트리밍 속도의 균형</td></tr>
+          <tr><td>작업 실행 방식</td><td>요청 스레드에서 동기 스트리밍</td><td>Job Queue와 체크포인트 기반 비동기 실행</td><td>구조 단순성과 장시간 작업·승인 대기의 확장성</td></tr>
+          <tr><td>과금과 관측성</td><td>관측성 도구 데이터를 과금에 겸용</td><td>과금 전용 원장 DB와 관측성 분리</td><td>빠른 구축 속도와 월말 청구 정합성 신뢰도</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <footer class="footer"><strong>13</strong> / 14</footer>
+    <aside class="speaker-notes">
+      <p><strong>[14:00 ~ 14:30]</strong> 이번 주 설계 PR에서 각자 입장을 정해보면 좋을 4가지 트레이드오프입니다. 정답은 없으니 우선순위에 맞춰 근거를 풀어주시면 다음 주 리뷰가 풍성해질 것 같습니다.</p>
+    </aside>
+  </section>
+
+  <!-- 14 Discussion -->
+  <section class="slide" data-title="자유 토론" data-pace="목표 0.5분 · 누적 15:00">
+    <div class="slide-head">
+      <div class="slide-head-main">
+        <span class="title-accent" aria-hidden="true"></span>
+        <h2 class="heading">함께 논의해 볼 질문</h2>
+      </div>
+    </div>
+    <div class="slide-body">
+      <div class="disc-grid">
+        <div class="disc-card">
+          <div class="card-head">
+            <span class="idx-pill mint">질문 1</span>
+            <h3>스트리밍 중 출력 가드레일</h3>
+          </div>
+          <div class="lines">
+            <span>실시간 스트리밍 도중 개인정보나 정책 위반이 탐지되었습니다.</span>
+            <span>문장 단위로 버퍼링할지, 즉시 중단하고 회수 메시지를 보낼지 어떻게 설계할까요?</span>
+          </div>
+        </div>
+        <div class="disc-card">
+          <div class="card-head">
+            <span class="idx-pill mint">질문 2</span>
+            <h3>자체 키(BYOK) 장애 시 폴백</h3>
+          </div>
+          <div class="lines">
+            <span>고객사 자체 키가 속도 제한(429)이나 만료로 실패했습니다.</span>
+            <span>플랫폼 공용 키로 자동 전환해 과금해야 할까요, 즉시 실패 처리해야 할까요?</span>
+          </div>
+        </div>
+        <div class="disc-card">
+          <div class="card-head">
+            <span class="idx-pill mint">질문 3</span>
+            <h3>멀티스텝 도중 예산 초과</h3>
+          </div>
+          <div class="lines">
+            <span>Agent가 세 번째 도구를 호출한 시점에 월간 예산 상한에 도달했습니다.</span>
+            <span>중간 결과를 요약해 반환할지, 즉시 중단할지, 현재 턴만 완료를 허용할까요?</span>
+          </div>
+        </div>
+        <div class="disc-card">
+          <div class="card-head">
+            <span class="idx-pill mint">질문 4</span>
+            <h3>오픈소스와 자체 구축의 경계</h3>
+          </div>
+          <div class="lines">
+            <span>LiteLLM과 Langfuse 같은 오픈소스를 그대로 쓰는 범위와,</span>
+            <span>과금 원장·키 관리처럼 직접 구현해야 하는 모듈의 경계는 어디일까요?</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <footer class="footer"><strong>14</strong> / 14</footer>
+    <aside class="speaker-notes">
+      <p><strong>[14:30 ~ 15:00]</strong> 이상으로 발표를 마치겠습니다. 네 가지 질문 중 특히 질문 1(스트리밍 중 출력 가드레일)이나 질문 2(자체 키 장애 시 폴백)에 대해 스터디원분들 의견을 들어보고 싶습니다. 감사합니다!</p>
+    </aside>
+  </section>
+
+  <div class="deck-progress" aria-hidden="true"><div class="deck-progress-bar" id="progressBar"></div></div>
+</main>
+
+<div class="help" aria-hidden="true">← → 이동 &nbsp;·&nbsp; F 전체화면 &nbsp;·&nbsp; N 발표자 메모 &nbsp;·&nbsp; O 전체 보기</div>
+<div class="controls" role="navigation" aria-label="슬라이드 이동">
+  <button id="prev" title="이전 슬라이드 (←)" aria-label="이전 슬라이드">
+    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12.5 4.5L7 10l5.5 5.5"/></svg>
+  </button>
+  <button id="overviewBtn" title="전체 슬라이드 보기 (O)" aria-label="전체 슬라이드 보기">
+    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="5.5" height="5.5" rx="1.2"/><rect x="11.5" y="3" width="5.5" height="5.5" rx="1.2"/><rect x="3" y="11.5" width="5.5" height="5.5" rx="1.2"/><rect x="11.5" y="11.5" width="5.5" height="5.5" rx="1.2"/></svg>
+  </button>
+  <button id="notesBtn" title="발표자 메모 (N)" aria-label="발표자 메모">
+    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5.5h12M4 10h12M4 14.5h8"/></svg>
+  </button>
+  <button id="fullscreenBtn" title="전체화면 (F)" aria-label="전체화면">
+    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 7.5V4.5a1 1 0 0 1 1-1h3M12.5 3.5h3a1 1 0 0 1 1 1v3M16.5 12.5v3a1 1 0 0 1-1 1h-3M7.5 16.5h-3a1 1 0 0 1-1-1v-3"/></svg>
+  </button>
+  <button id="next" title="다음 슬라이드 (→)" aria-label="다음 슬라이드">
+    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7.5 4.5L13 10l-5.5 5.5"/></svg>
+  </button>
+</div>
+<aside id="notesPanel" aria-live="polite"><h3>발표자 메모 <span class="pace-badge" id="paceBadge"></span></h3><div id="notesContent"></div></aside>
+<div id="overview" role="dialog" aria-modal="true" aria-label="전체 슬라이드 보기"><h2>전체 슬라이드</h2><div class="thumbs" id="thumbs"></div><button class="close-overview" id="closeOverview">닫기 (Esc)</button></div>
+
+<script>
+(() => {
+  'use strict';
+  const deck = document.getElementById('deck');
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  const notesPanel = document.getElementById('notesPanel');
+  const notesContent = document.getElementById('notesContent');
+  const paceBadge = document.getElementById('paceBadge');
+  const overview = document.getElementById('overview');
+  const progressBar = document.getElementById('progressBar');
+  let index = 0;
+  function scaleDeck() {
+    const s = Math.min(window.innerWidth / 1440, window.innerHeight / 810);
+    deck.style.transform = `scale(${s})`;
+    deck.style.left = `${Math.round((window.innerWidth - 1440*s)/2)}px`;
+    deck.style.top = `${Math.round((window.innerHeight - 810*s)/2)}px`;
+  }
+  function showSlide(next, updateHash = true) {
+    index = Math.max(0, Math.min(slides.length-1, next));
+    slides.forEach((s, i) => { s.classList.toggle('active', i===index); s.setAttribute('aria-hidden', String(i!==index)); });
+    if (progressBar) progressBar.style.width = `${((index + 1) / slides.length) * 100}%`;
+    if (updateHash) history.replaceState(null, '', `#${index+1}`);
+    notesContent.innerHTML = slides[index].querySelector('.speaker-notes')?.innerHTML || '<p>메모가 없습니다.</p>';
+    paceBadge.textContent = slides[index].dataset.pace || '';
+  }
+  function toggleNotes() { notesPanel.classList.toggle('open'); }
+  function toggleOverview(force) { overview.classList.toggle('open', typeof force === 'boolean' ? force : !overview.classList.contains('open')); }
+  function go(delta) { showSlide(index + delta); }
+  const thumbs = document.getElementById('thumbs');
+  slides.forEach((slide, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'thumb';
+    const number = document.createElement('span'); number.textContent = `${String(i+1).padStart(2,'0')} · ${slide.dataset.pace?.split('·')[0]?.trim() || ''}`;
+    const title = document.createElement('strong'); title.textContent = slide.dataset.title;
+    btn.append(number, title);
+    btn.addEventListener('click', () => { showSlide(i); toggleOverview(false); });
+    thumbs.appendChild(btn);
+  });
+  document.getElementById('prev').addEventListener('click', () => go(-1));
+  document.getElementById('next').addEventListener('click', () => go(1));
+  document.getElementById('notesBtn').addEventListener('click', toggleNotes);
+  document.getElementById('overviewBtn').addEventListener('click', () => toggleOverview());
+  document.getElementById('closeOverview').addEventListener('click', () => toggleOverview(false));
+  document.getElementById('fullscreenBtn').addEventListener('click', () => {
+    if (!document.fullscreenElement) document.documentElement.requestFullscreen?.(); else document.exitFullscreen?.();
+  });
+  window.addEventListener('keydown', (ev) => {
+    const key = ev.key;
+    if (key.toLowerCase() === 'n') { toggleNotes(); return; }
+    if (key.toLowerCase() === 'o') { toggleOverview(); return; }
+    if (key.toLowerCase() === 'f') { if (!document.fullscreenElement) document.documentElement.requestFullscreen?.(); else document.exitFullscreen?.(); return; }
+    if (overview.classList.contains('open')) { if (key==='Escape') toggleOverview(false); return; }
+    if (key==='ArrowRight'||key==='ArrowDown'||key===' '||key==='PageDown') { ev.preventDefault(); go(1); }
+    if (key==='ArrowLeft'||key==='ArrowUp'||key==='PageUp') { ev.preventDefault(); go(-1); }
+    if (key==='Home') showSlide(0);
+    if (key==='End') showSlide(slides.length-1);
+    if (key==='Escape') notesPanel.classList.remove('open');
+  });
+  let touchX = null;
+  window.addEventListener('touchstart', e => { touchX = e.touches[0]?.clientX ?? null; }, {passive:true});
+  window.addEventListener('touchend', e => {
+    if (touchX === null) return;
+    const diff = (e.changedTouches[0]?.clientX ?? touchX) - touchX;
+    if (Math.abs(diff) > 65) go(diff < 0 ? 1 : -1);
+    touchX = null;
+  }, {passive:true});
+  window.addEventListener('resize', scaleDeck);
+  window.addEventListener('hashchange', () => { const n = Number(location.hash.slice(1)); if (Number.isInteger(n)) showSlide(n-1, false); });
+  scaleDeck();
+  const initial = Number(location.hash.slice(1));
+  showSlide(Number.isInteger(initial) && initial>=1 ? initial-1 : 0, !location.hash);
+})();
+</script>
+</body>
+</html>
